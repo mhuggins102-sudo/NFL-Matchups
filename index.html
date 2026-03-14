@@ -32,10 +32,14 @@
             --color-platinum: #80e0e0;
         }
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        @keyframes fade-in { from { opacity: 0; transform: translate(-50%, -10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+        .animate-toast { animation: fade-in 0.3s ease-out forwards; }
         @keyframes fade-in-up { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
         .animate-enter { animation: fade-in-up 0.3s ease-out forwards; }
         @keyframes score-pop { 0%{transform:scale(1);}50%{transform:scale(1.5);}100%{transform:scale(1);} }
         .animate-score-pop { animation: score-pop 0.4s ease-out; }
+        @keyframes score-pop-single { 0%{transform:scale(1);}50%{transform:scale(1.5);color:var(--color-primary);}100%{transform:scale(1);} }
+        .animate-score-pop-single { animation: score-pop-single 0.4s ease-out; }
         @keyframes text-pop { 0%{opacity:0;transform:scale(0.5);}50%{opacity:1;transform:scale(1.3);}100%{opacity:1;transform:scale(1);} }
         .animate-text-pop { animation: text-pop 0.4s cubic-bezier(0.175,0.885,0.32,1.275) forwards; }
         @keyframes pulse-bull { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
@@ -79,7 +83,7 @@
         #slider-touch-area { touch-action:none; }
         .thumb-active { transform:translate(-50%,-50%) scale(1.15)!important; cursor:grabbing!important; }
         .stripe-pattern { background-image:repeating-linear-gradient(45deg,transparent,transparent 4px,rgba(0,0,0,0.1) 4px,rgba(0,0,0,0.1) 8px); }
-        .pickem-card { background:white; border:2px solid #e5e7eb; border-radius:0.75rem; padding:0.5rem 0.25rem; text-align:center; cursor:pointer; transition:all 0.15s; font-size:0.7rem; font-weight:600; color:#374151; }
+        .pickem-card { position:relative; background:white; border:2px solid #e5e7eb; border-radius:0.75rem; padding:0.5rem 0.25rem; text-align:center; cursor:pointer; transition:all 0.15s; font-size:0.7rem; font-weight:600; color:#374151; }
         html.dark .pickem-card { background:#1f2937; border-color:#374151; color:#d1d5db; }
         .pickem-card:active:not(.revealed) { transform:scale(0.96); }
         .pickem-card.selected { border-color:var(--color-primary); background:#f0fdf4; color:var(--color-primary); }
@@ -302,7 +306,7 @@
                 <div id="pickem-thresh-val" class="text-xl font-black text-gray-900 dark:text-white"></div>
                 <div id="pickem-cat-label" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5"></div>
             </div>
-            <div id="pickem-chain-bar" class="hidden text-xs font-bold text-amber-600 dark:text-amber-400 text-center py-1 mb-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg"></div>
+            <div id="pickem-chain-bar" class="hidden text-sm font-bold text-amber-600 dark:text-amber-400 text-center"></div>
             <div id="pickem-grid" class="grid grid-cols-2 gap-2 mb-4"></div>
             <button id="pickem-submit-btn" class="primary-btn" disabled>Reveal</button>
         </div>
@@ -310,8 +314,8 @@
 
     <!-- END SCREEN -->
     <div id="end-screen" class="hidden flex flex-col items-center justify-center h-full pt-8">
-        <div id="ribbon-emoji" class="text-7xl mb-2 text-center"></div>
-        <div id="ribbon-text" class="text-sm font-bold text-center mb-2"></div>
+        <div id="ribbon-emoji" class="text-8xl mb-4 text-center"></div>
+        <p id="ribbon-text" class="text-lg font-bold text-center mb-4"></p>
         <div class="text-center mb-6 space-y-2">
             <div class="text-xs font-black uppercase tracking-widest text-gray-600 dark:text-gray-400">Final Score</div>
             <div class="text-6xl font-black text-green-600 dark:text-green-400" id="final-score">0</div>
@@ -326,8 +330,13 @@
             </label>
             <button id="save-score-btn" class="primary-btn mb-2">Save to Leaderboard</button>
         </div>
-        <button id="share-btn" class="w-full max-w-xs py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl text-base shadow-lg transition mb-3">Share Result</button>
-        <button id="play-again-btn" class="primary-btn max-w-xs">Play Again</button>
+        <div class="flex gap-2 w-full max-w-xs">
+            <button id="share-btn" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2">
+                <span>Share</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+            </button>
+            <button id="play-again-btn" class="flex-1 primary-btn">Play Again</button>
+        </div>
     </div>
 </main>
 
@@ -352,18 +361,24 @@
             <button id="close-leaderboard-btn" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-600 dark:text-gray-500">&times;</button>
         </div>
         <div class="px-4 pt-3">
-            <div class="flex gap-2 mb-3">
-                <select id="lb-filter-mode" class="flex-1 text-xs font-semibold bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1">
+            <div class="grid grid-cols-3 gap-2 mb-3">
+                <select id="lb-filter-mode" class="text-xs font-semibold bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1">
                     <option value="all">All Modes</option>
                     <option value="howMuch">How Much?</option>
                     <option value="sideBySide">Showdown</option>
                     <option value="pickEm">Pick 'Em</option>
                 </select>
-                <select id="lb-filter-elig" class="flex-1 text-xs font-semibold bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1">
+                <select id="lb-filter-elig" class="text-xs font-semibold bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1">
                     <option value="all">All Tiers</option>
                     <option value="standard">Veteran</option>
                     <option value="allStar">All-Pro</option>
                     <option value="hof">HOF</option>
+                </select>
+                <select id="lb-filter-date" class="text-xs font-semibold bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1">
+                    <option value="all_time">All Time</option>
+                    <option value="today">Today</option>
+                    <option value="this_month">This Month</option>
+                    <option value="last_month">Last Month</option>
                 </select>
             </div>
         </div>
@@ -382,41 +397,190 @@
 <!-- RULES MODAL -->
 <div id="rules-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center px-4">
     <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" id="rules-overlay"></div>
-    <div class="relative bg-white dark:bg-gray-900 w-full max-w-md max-h-[85vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
+    <div class="relative bg-white dark:bg-gray-900 w-full max-w-lg max-h-[80vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-enter border border-gray-200 dark:border-gray-800">
         <div class="flex justify-between items-center p-5 border-b border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
-            <h3 class="text-lg font-black text-gray-900 dark:text-white">How to Play</h3>
-            <button id="close-rules" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-600 dark:text-gray-500 text-xl">&times;</button>
+            <h3 class="text-lg font-black uppercase tracking-wide text-gray-800 dark:text-white">Rules &amp; Scoring</h3>
+            <button id="close-rules" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-600 dark:text-gray-500">&times;</button>
         </div>
-        <div class="p-5 overflow-y-auto">
-            <div class="space-y-4 text-sm">
-                <div>
-                    <h3 class="font-black text-green-600 dark:text-green-400 mb-1">🏈 How Much?</h3>
-                    <p class="text-gray-700 dark:text-gray-300">Pick which player has the higher (or lower) stat, then set a range for the difference using the slider. A tighter range earns more points.</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Correct player + inside range: <strong>200–1000 pts</strong>. Hit the bullseye zone: <strong>+100 bonus</strong>. Wrong player or outside range: <strong>0 pts</strong>.</p>
-                </div>
-                <div>
-                    <h3 class="font-black text-green-600 dark:text-green-400 mb-1">⚡ Showdown</h3>
-                    <p class="text-gray-700 dark:text-gray-300">Two players, 10 stat categories head-to-head. Pick who wins each category before locking in.</p>
-                    <div class="mt-1 text-xs text-gray-500 dark:text-gray-400 grid grid-cols-2 gap-x-4">
-                        <span>6/10 correct → 100 pts</span><span>7/10 → 250 pts</span>
-                        <span>8/10 → 450 pts</span><span>9/10 → 700 pts</span>
-                        <span>10/10 → 1000 pts</span><span>&lt;6/10 → 0 pts</span>
+        <div class="p-0 overflow-y-auto text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+
+            <!-- SECTION 1: HOW TO PLAY -->
+            <details open class="group border-b border-gray-200 dark:border-gray-800">
+                <summary class="flex justify-between items-center p-4 font-bold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50 transition select-none">
+                    <span>How to Play</span>
+                    <svg class="w-4 h-4 transition-transform duration-200 text-gray-600 dark:text-gray-400 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </summary>
+                <div class="px-4 pb-4 pt-0 text-gray-600 dark:text-gray-400 space-y-4">
+                    <div>
+                        <h4 class="font-black text-green-600 dark:text-green-400 uppercase text-xs tracking-widest mb-2">How Much?</h4>
+                        <ol class="list-decimal ml-5 space-y-2">
+                            <li><strong>Analyze the Matchup:</strong> Review the category (e.g., Career Pass Yards) and the two players displayed. Note if the prompt asks for the <em>Higher</em> or <em>Lower</em> stat.</li>
+                            <li><strong>Pick the Winner:</strong> Tap the card of the player you believe is the statistical leader in that category.</li>
+                            <li><strong>Estimate the Gap:</strong> Use the dual-slider controls to set a "Min" and "Max" range for the difference between the two players.
+                                <ul class="list-disc ml-4 mt-1 text-xs opacity-90">
+                                    <li><em>Example:</em> If Player A has 50,000 Pass Yards and Player B has 45,000, the difference is 5,000. You might set your range from 4,000 to 6,000.</li>
+                                    <li>The tighter your range, the more points you score — but you risk missing the answer entirely.</li>
+                                </ul>
+                            </li>
+                            <li><strong>Lock In:</strong> Submit your guess to reveal the answer and score points.</li>
+                        </ol>
+                    </div>
+                    <hr class="border-gray-200 dark:border-gray-800">
+                    <div>
+                        <h4 class="font-black text-green-600 dark:text-green-400 uppercase text-xs tracking-widest mb-2">Showdown</h4>
+                        <ol class="list-decimal ml-5 space-y-2">
+                            <li><strong>The Face-Off:</strong> You are presented with two players and a list of 10 different statistical categories.</li>
+                            <li><strong>Pick 10 Winners:</strong> For each row, tap the name of the player you think has the better stat in that specific category.</li>
+                            <li><strong>Lock In:</strong> You must make a selection for all 10 categories before you can submit.</li>
+                            <li><strong>The Reveal:</strong> The game reveals the actual stats row-by-row. You need at least 6 correct to score points, and 10/10 for a massive bonus.</li>
+                        </ol>
+                    </div>
+                    <hr class="border-gray-200 dark:border-gray-800">
+                    <div>
+                        <h4 class="font-black text-green-600 dark:text-green-400 uppercase text-xs tracking-widest mb-2">Pick 'Em</h4>
+                        <ol class="list-decimal ml-5 space-y-2">
+                            <li><strong>The Grid:</strong> You are given a stat category, a threshold (e.g., Career Rush Yards &ge; 10,000), and a grid of 10 players.</li>
+                            <li><strong>Make Your Picks:</strong> Tap the players you believe meet the criteria. Each correct pick earns 100 points.</li>
+                            <li><strong>Chain Bonus:</strong> If you pick players in order from farthest to closest to the threshold, you earn escalating bonus points (+50, +100, +150&hellip;).</li>
+                            <li><strong>Be Careful:</strong> A wrong pick ends the round immediately. You can make up to 5 picks per round.</li>
+                        </ol>
                     </div>
                 </div>
-                <div>
-                    <h3 class="font-black text-green-600 dark:text-green-400 mb-1">🎯 Pick 'Em</h3>
-                    <p class="text-gray-700 dark:text-gray-300">A stat threshold is shown. From 10 players, pick those who meet it. Each correct pick earns 100 pts, plus chain bonuses for consecutive correct picks. One wrong pick ends the round.</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Chain bonus: +50 × (chain length) per pick.</p>
+            </details>
+
+            <!-- SECTION 2: SCORING BREAKDOWN -->
+            <details class="group border-b border-gray-200 dark:border-gray-800">
+                <summary class="flex justify-between items-center p-4 font-bold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50 transition select-none">
+                    <span>Scoring Breakdown</span>
+                    <svg class="w-4 h-4 transition-transform duration-200 text-gray-600 dark:text-gray-400 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </summary>
+                <div class="px-4 pb-4 pt-0 text-gray-600 dark:text-gray-400 space-y-4">
+                    <div>
+                        <h4 class="font-black text-green-600 dark:text-green-400 uppercase text-xs tracking-widest mb-2">How Much? (Max 1,000 pts/round)</h4>
+                        <ul class="space-y-2">
+                            <li class="flex justify-between text-sm">
+                                <span><strong>1. Correct Player</strong></span>
+                                <span class="font-bold text-green-600 dark:text-green-400">+200 Pts</span>
+                            </li>
+                            <li class="text-xs mb-2">You earn these points simply for identifying the correct winner. If you pick the wrong player, you score 0 for the round.</li>
+                            <li class="flex justify-between text-sm">
+                                <span><strong>2. Range Accuracy</strong></span>
+                                <span class="font-bold text-green-600 dark:text-green-400">0 to +800 Pts</span>
+                            </li>
+                            <li class="text-xs mb-2">Awarded only if the true difference falls between your Min and Max sliders. The score is calculated exponentially based on how narrow your range is compared to the safe zone. A very tight, correct range yields max points.</li>
+                            <li class="flex justify-between text-sm">
+                                <span><strong>3. Bullseye Bonus</strong></span>
+                                <span class="font-bold text-amber-500">+100 Pts</span>
+                            </li>
+                            <li class="text-xs">A bonus awarded if the true difference lands in the bullseye zone — the center of your predicted range.</li>
+                        </ul>
+                    </div>
+                    <hr class="border-gray-200 dark:border-gray-800">
+                    <div>
+                        <h4 class="font-black text-green-600 dark:text-green-400 uppercase text-xs tracking-widest mb-2">Showdown (Max 1,000 pts/round)</h4>
+                        <p class="text-xs mb-2">Points are awarded based on the total number of correct selections (out of 10):</p>
+                        <div class="grid grid-cols-2 gap-2 text-xs font-medium">
+                            <div class="flex justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded"><span>10/10 Correct</span> <span class="text-green-600 font-bold">1,000 Pts</span></div>
+                            <div class="flex justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded"><span>9/10 Correct</span> <span class="text-green-600 font-bold">700 Pts</span></div>
+                            <div class="flex justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded"><span>8/10 Correct</span> <span class="text-green-600 font-bold">450 Pts</span></div>
+                            <div class="flex justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded"><span>7/10 Correct</span> <span class="text-orange-500 font-bold">250 Pts</span></div>
+                            <div class="flex justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded"><span>6/10 Correct</span> <span class="text-orange-500 font-bold">100 Pts</span></div>
+                            <div class="flex justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded"><span>0-5 Correct</span> <span class="text-gray-400 font-bold">0 Pts</span></div>
+                        </div>
+                    </div>
+                    <hr class="border-gray-200 dark:border-gray-800">
+                    <div>
+                        <h4 class="font-black text-green-600 dark:text-green-400 uppercase text-xs tracking-widest mb-2">Pick 'Em (Max 1,000+ pts/round)</h4>
+                        <ul class="space-y-2">
+                            <li class="flex justify-between text-sm">
+                                <span><strong>1. Correct Pick</strong></span>
+                                <span class="font-bold text-green-600 dark:text-green-400">+100 Pts each</span>
+                            </li>
+                            <li class="text-xs mb-2">Each correct selection from the grid earns 100 points. You can make up to 5 picks per round.</li>
+                            <li class="flex justify-between text-sm">
+                                <span><strong>2. Chain Bonus</strong></span>
+                                <span class="font-bold text-amber-500">+50, +100, +150&hellip;</span>
+                            </li>
+                            <li class="text-xs mb-2">Pick players in order from farthest to closest to the threshold. Each consecutive pick that is closer earns an escalating bonus (+50, +100, +150, etc.).</li>
+                            <li class="flex justify-between text-sm">
+                                <span><strong>3. Wrong Pick</strong></span>
+                                <span class="font-bold text-red-500">Ends Round</span>
+                            </li>
+                            <li class="text-xs">Selecting a player who does not meet the threshold immediately ends the round. Points earned so far in the round are kept.</li>
+                        </ul>
+                    </div>
                 </div>
-                <div>
-                    <h3 class="font-black text-green-600 dark:text-green-400 mb-1">🏅 Tiers</h3>
-                    <p class="text-xs text-gray-500 dark:text-gray-400"><strong>Veteran:</strong> Multi-year starters (QBs: 64+ starts, RBs: 750+ carries, WRs: 250+ rec, TEs: 150+ rec).<br><strong>All-Pro:</strong> Elite contributors — Career AV ≥ 80.<br><strong>HOF:</strong> Legends only — Career AV ≥ 130.</p>
+            </details>
+
+            <!-- SECTION 3: ELIGIBILITY CRITERIA -->
+            <details class="group border-b border-gray-200 dark:border-gray-800">
+                <summary class="flex justify-between items-center p-4 font-bold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50 transition select-none">
+                    <span>Eligibility Criteria</span>
+                    <svg class="w-4 h-4 transition-transform duration-200 text-gray-600 dark:text-gray-400 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </summary>
+                <div class="px-4 pb-4 pt-0 text-gray-600 dark:text-gray-400 text-xs space-y-4">
+                    <p>Players are filtered by <strong>Eligibility Criteria</strong> and <strong>Player Pool</strong>, selected independently on the home screen.</p>
+                    <div>
+                        <h4 class="font-bold text-gray-900 dark:text-white mb-1">1. Veteran</h4>
+                        <p class="mb-1">Designed to include recognizable players with significant careers.</p>
+                        <ul class="list-disc ml-4 space-y-1">
+                            <li><strong>QBs:</strong> 64+ career games started.</li>
+                            <li><strong>RBs:</strong> 750+ career rush attempts.</li>
+                            <li><strong>WRs:</strong> 250+ career receptions.</li>
+                            <li><strong>TEs:</strong> 150+ career receptions.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-gray-900 dark:text-white mb-1">2. All-Pro</h4>
+                        <p class="mb-1">A more exclusive tier featuring elite contributors.</p>
+                        <ul class="list-disc ml-4 space-y-1">
+                            <li>Career Approximate Value (AV) &ge; 80.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-gray-900 dark:text-white mb-1">3. Hall of Fame</h4>
+                        <p class="mb-1">Only the all-time legends.</p>
+                        <ul class="list-disc ml-4 space-y-1">
+                            <li>Career Approximate Value (AV) &ge; 130.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-gray-900 dark:text-white mb-1">4. Era Selection</h4>
+                        <ul class="list-disc ml-4 space-y-1">
+                            <li><strong>Modern (2000+):</strong> Players active from 2000 to present.</li>
+                            <li><strong>All Eras:</strong> Includes historical players back to the 1960s.</li>
+                            <li><strong>Specific Decade:</strong> Players active during the selected decade (e.g., 1990s).</li>
+                        </ul>
+                    </div>
                 </div>
-                <div>
-                    <h3 class="font-black text-green-600 dark:text-green-400 mb-1">🎲 Reroll</h3>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">One free skip per game. Use it on a tough matchup.</p>
+            </details>
+
+            <!-- SECTION 4: SPECIAL FEATURES -->
+            <details class="group">
+                <summary class="flex justify-between items-center p-4 font-bold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50 transition select-none">
+                    <span>Special Features</span>
+                    <svg class="w-4 h-4 transition-transform duration-200 text-gray-600 dark:text-gray-400 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </summary>
+                <div class="px-4 pb-4 pt-0 text-gray-600 dark:text-gray-400 text-xs space-y-3">
+                    <div>
+                        <strong class="text-gray-900 dark:text-white block mb-1">Reroll</strong>
+                        <p>One free skip per game. If you don't like the matchup, reroll it for a fresh one. Available once per game (not per round).</p>
+                    </div>
+                    <div>
+                        <strong class="text-gray-900 dark:text-white block mb-1">Pro-Football-Reference Links</strong>
+                        <p>After a round is locked in, player names become clickable links. Tap any player's name to visit their official Pro-Football-Reference page and verify their stats.</p>
+                    </div>
+                    <div>
+                        <strong class="text-gray-900 dark:text-white block mb-1">Dead Zone</strong>
+                        <p>When enabled (in Settings), a striped "invalid zone" appears at the left of the slider. This prevents trivially wide ranges from earning points.</p>
+                    </div>
+                    <div>
+                        <strong class="text-gray-900 dark:text-white block mb-1">Number Format</strong>
+                        <p>Toggle between decimal (.12) and whole number (123) display in Settings.</p>
+                    </div>
                 </div>
-            </div>
+            </details>
+
         </div>
     </div>
 </div>
@@ -431,7 +595,7 @@
         </div>
         <div class="p-5 text-sm text-gray-600 dark:text-gray-300 space-y-4">
             <div><div class="font-black text-gray-800 dark:text-white mb-1">How Much?</div><p class="text-xs">Pick the player with the higher stat, then set a range for the difference. Tighter range = more points.</p></div>
-            <div class="border-t border-gray-200 dark:border-gray-800 pt-3"><div class="font-black text-gray-800 dark:text-white mb-1">Showdown</div><p class="text-xs">Two players, 10 stat categories. Pick who wins each. Score = (correct picks / 10) × 1000 pts.</p></div>
+            <div class="border-t border-gray-200 dark:border-gray-800 pt-3"><div class="font-black text-gray-800 dark:text-white mb-1">Showdown</div><p class="text-xs">Two players, 10 stat categories. Pick who wins each. Need 6+ correct to score (100–1000 pts).</p></div>
             <div class="border-t border-gray-200 dark:border-gray-800 pt-3"><div class="font-black text-gray-800 dark:text-white mb-1">Pick 'Em</div><p class="text-xs">A threshold is shown. From 10 players, pick those who meet it. Correct picks earn 100 pts + chain bonuses.</p></div>
         </div>
     </div>
@@ -728,7 +892,7 @@ function makeLink(p) {
 function showAlert(msg, cls) {
     var el = dom.alert;
     el.textContent = msg;
-    el.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-2xl shadow-xl z-[80] font-bold text-sm opacity-100 pointer-events-none transition-all duration-300 text-center max-w-[calc(100%-2.5rem)] text-white ' + (cls || 'bg-green-600');
+    el.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-2xl shadow-xl z-[80] font-bold text-sm opacity-100 pointer-events-none text-center max-w-[calc(100%-2.5rem)] text-white animate-toast ' + (cls || 'bg-green-600');
     clearTimeout(el._t);
     el._t = setTimeout(function() { el.style.opacity = '0'; }, 2000);
 }
@@ -1011,15 +1175,16 @@ function shuffle(arr) {
 // ═══════════════════════════════════════
 function calcHowMuchScore(diff, min, max) {
     if (diff < min || diff > max) return 0;
-    var span = max - min;
-    var safeSpan = sliderState.rangeMax - sliderState.minLimit;
-    if (safeSpan <= 0) return 500;
-    var rangeWidth = span;
-    var norm = Math.max(0, (safeSpan - rangeWidth) / safeSpan);
+    var curCat = BASE_CATS[catKey];
+    var scoringSpan = (curCat.dMin * 5) - curCat.dMin;
+    var rangeWidth = max - min;
+    var safeSpan = scoringSpan > 0 ? scoringSpan : 1;
+    var norm = Math.max(0, Math.min(1, (safeSpan - rangeWidth) / safeSpan));
     var rangePts = Math.round(800 * Math.pow(norm, 2));
-    var bull = BASE_BULL[catKey] || (sliderState.rangeMax * 0.05);
-    var bullPts = (span <= bull * 2) ? 100 : 0;
-    return 200 + rangePts + bullPts;
+    var bw = BASE_BULL[catKey] || 0;
+    var mid = (min + max) / 2, eps = 1e-5;
+    var bullPts = (diff >= mid - bw / 2 - eps && diff <= mid + bw / 2 + eps) ? 100 : 0;
+    return Math.min(1000, Math.max(0, 200 + rangePts + bullPts));
 }
 
 // ═══════════════════════════════════════
@@ -1076,7 +1241,7 @@ function startRound() {
         var match = generatePickEm();
         if (!match) { showAlert('Not enough players for these settings','bg-red-500'); return; }
         catKey = match.cat;
-        pickEmState = {threshold:match.threshold, correctIDs:match.correctIDs, picksMade:0, totalRoundPts:0, lastVal:null, chainActive:true, chainCount:0, roundOver:false};
+        pickEmState = {threshold:match.threshold, correctIDs:match.correctIDs, picksMade:0, totalRoundPts:0, lastVal:null, chainActive:true, chainCount:0, chainJustBroke:false, roundOver:false};
         var cc = BASE_CATS[catKey];
         var op = cc.lowerBetter ? '≤' : '≥';
         dom.pickemThresh.textContent = op + ' ' + formatStat(match.threshold, catKey);
@@ -1090,8 +1255,8 @@ function startRound() {
             card.dataset.val = item.val;
             card.innerHTML = '<div class="font-black text-xs leading-tight">' + item.p.name + '</div>'
                 + '<div class="stat-val hidden text-xs font-bold mt-0.5"></div>'
-                + '<div class="base-pts-tag hidden text-[10px] font-black text-green-600 dark:text-green-400">+100</div>'
-                + '<div class="bonus-tag hidden text-[10px] font-black text-amber-600 dark:text-amber-400"></div>';
+                + '<div class="base-pts-tag absolute bottom-1 left-1 hidden text-[9px] font-black text-green-600 dark:text-green-400 pointer-events-none">+100</div>'
+                + '<div class="bonus-tag absolute bottom-1 right-1 hidden text-[9px] font-black text-amber-500 pointer-events-none"></div>';
             card.addEventListener('click', function() { onPickEmCardClick(card, item.p, item.val); });
             grid.appendChild(card);
         });
@@ -1130,7 +1295,7 @@ function onCardClick(which) {
 }
 
 function lockInHowMuch() {
-    if (dom.submitBtn.textContent === 'Next Round' || dom.submitBtn.textContent === 'Finish') {
+    if (dom.submitBtn.textContent === 'Next Round' || dom.submitBtn.textContent === 'Finish Game') {
         round++;
         startRound();
         return;
@@ -1189,7 +1354,7 @@ function finishRound(pts) {
         }
     }
     showAlert(pts > 0 ? '+' + pts + ' pts!' : 'No points', pts > 0 ? 'bg-green-600' : 'bg-red-500');
-    dom.submitBtn.textContent = round >= 10 ? 'Finish' : 'Next Round';
+    dom.submitBtn.textContent = round >= 10 ? 'Finish Game' : 'Next Round';
     dom.submitBtn.disabled = false;
     dom.rerollBtn.disabled = true;
 }
@@ -1230,7 +1395,7 @@ function onSBSCellClick(idx, which, cats) {
 }
 
 function lockInShowdown() {
-    if (dom.sbsSubmitBtn.textContent === 'Next Round' || dom.sbsSubmitBtn.textContent === 'Finish') {
+    if (dom.sbsSubmitBtn.textContent === 'Next Round' || dom.sbsSubmitBtn.textContent === 'Finish Game') {
         round++;
         startRound();
         return;
@@ -1279,7 +1444,7 @@ function lockInShowdown() {
         }
     }
     showAlert('+' + pts + ' pts (' + correct + '/' + cats.length + ')','bg-green-600');
-    dom.sbsSubmitBtn.textContent = round >= 10 ? 'Finish' : 'Next Round';
+    dom.sbsSubmitBtn.textContent = round >= 10 ? 'Finish Game' : 'Next Round';
     dom.sbsSubmitBtn.disabled = false;
     dom.rerollBtn.disabled = true;
     // Make names clickable
@@ -1296,53 +1461,61 @@ function onPickEmCardClick(card, player, val) {
         card.querySelector('.stat-val').textContent = formatStat(val, catKey);
         card.querySelector('.stat-val').classList.remove('hidden');
         card.querySelector('.base-pts-tag').classList.remove('hidden');
-        pickEmState.chainCount++;
-        var bonus = pickEmState.chainActive ? (pickEmState.chainCount - 1) * 50 : 0;
-        var pts = 100 + bonus;
-        pickEmState.totalRoundPts += pts;
-        if (bonus > 0) {
-            card.querySelector('.bonus-tag').textContent = '+' + bonus + ' chain!';
-            card.querySelector('.bonus-tag').classList.remove('hidden');
+        if (useAnimations) card.querySelector('.base-pts-tag').classList.add('animate-text-pop');
+        pickEmState.picksMade++;
+        var pts = 100;
+        // Chain logic: require picks ordered from farthest to closest to threshold
+        if (pickEmState.chainActive && pickEmState.lastVal !== null) {
+            var distCurrent = Math.abs(val - pickEmState.threshold);
+            var distLast = Math.abs(pickEmState.lastVal - pickEmState.threshold);
+            if (distCurrent <= distLast) {
+                pickEmState.chainCount = (pickEmState.chainCount || 0) + 1;
+                var bonusVal = pickEmState.chainCount * 50;
+                pts += bonusVal;
+                var bonusEl = card.querySelector('.bonus-tag');
+                bonusEl.textContent = '+' + bonusVal;
+                bonusEl.classList.remove('hidden');
+                if (useAnimations) bonusEl.classList.add('animate-text-pop');
+            } else {
+                pickEmState.chainActive = false;
+                pickEmState.chainJustBroke = true;
+            }
         }
+        pickEmState.totalRoundPts += pts;
+        pickEmState.lastVal = val;
         // Update chain bar
         if (dom.pickemChainBar) {
-            dom.pickemChainBar.classList.remove('hidden');
-            dom.pickemChainBar.textContent = 'Chain active! Next correct pick: +' + (50 * pickEmState.chainCount) + ' bonus';
+            if (pickEmState.chainJustBroke) {
+                pickEmState.chainJustBroke = false;
+                dom.pickemChainBar.classList.remove('hidden');
+                dom.pickemChainBar.innerHTML = '<span class="text-amber-500 dark:text-amber-400">Chain broken! No more bonus this round.</span>';
+            } else if (pickEmState.chainActive) {
+                var catCfgCG = BASE_CATS[catKey];
+                var op2 = catCfgCG.lowerBetter ? '≥' : '≤';
+                var displayVal = formatStat(val, catKey);
+                dom.pickemChainBar.classList.remove('hidden');
+                dom.pickemChainBar.innerHTML = 'For +' + ((pickEmState.chainCount + 1) * 50) + ' bonus, next correct pick must be ' + op2 + ' ' + displayVal + '.';
+            } else {
+                dom.pickemChainBar.classList.add('hidden');
+                dom.pickemChainBar.innerHTML = '';
+            }
         }
-        showAlert('+' + pts + (bonus ? ' (chain!)' : ''),'bg-green-600');
+        showAlert('+' + pts + (pts > 100 ? ' (chain!)' : ''),'bg-green-600');
+        if (pickEmState.picksMade >= 5) {
+            endPickEmRound(true);
+            return;
+        }
     } else {
         card.classList.add('revealed', 'incorrect');
         card.querySelector('.stat-val').textContent = formatStat(val, catKey);
         card.querySelector('.stat-val').classList.remove('hidden');
-        pickEmState.chainActive = false;
-        showAlert('Wrong! Round over','bg-red-500');
-        pickEmState.roundOver = true;
-        // Reveal all remaining
-        dom.pickemGrid.querySelectorAll('.pickem-card:not(.revealed)').forEach(function(c) {
-            var cid = c.dataset.id;
-            var cval = parseFloat(c.dataset.val);
-            c.classList.add('revealed');
-            c.querySelector('.stat-val').textContent = formatStat(cval, catKey);
-            c.querySelector('.stat-val').classList.remove('hidden');
-            if (pickEmState.correctIDs.has(cid)) c.classList.add('missed');
-            else c.classList.add('incorrect');
-        });
-        roundResults.push({round:round, pts:pickEmState.totalRoundPts, cat:BASE_CATS[catKey].label, correct:false});
-        score += pickEmState.totalRoundPts;
-        dom.scoreDisp.textContent = score;
-        updateScoreColor();
-        dom.pickemSubmitBtn.textContent = round >= 10 ? 'Finish' : 'Next Round';
-        dom.pickemSubmitBtn.disabled = false;
-        dom.rerollBtn.disabled = true;
+        if (dom.pickemChainBar) { dom.pickemChainBar.classList.add('hidden'); dom.pickemChainBar.innerHTML = ''; }
+        endPickEmRound(false);
     }
 }
 
-function lockInPickEm() {
-    if (dom.pickemSubmitBtn.textContent === 'Next Round' || dom.pickemSubmitBtn.textContent === 'Finish') {
-        round++;
-        startRound();
-        return;
-    }
+function endPickEmRound(wasCorrect) {
+    pickEmState.roundOver = true;
     // Reveal all remaining
     dom.pickemGrid.querySelectorAll('.pickem-card:not(.revealed)').forEach(function(c) {
         var cid = c.dataset.id;
@@ -1353,13 +1526,24 @@ function lockInPickEm() {
         if (pickEmState.correctIDs.has(cid)) c.classList.add('missed');
         else c.classList.add('incorrect');
     });
-    roundResults.push({round:round, pts:pickEmState.totalRoundPts, cat:BASE_CATS[catKey].label, correct:true});
+    roundResults.push({round:round, pts:pickEmState.totalRoundPts, cat:BASE_CATS[catKey].label, correct:wasCorrect});
     score += pickEmState.totalRoundPts;
     dom.scoreDisp.textContent = score;
     updateScoreColor();
-    showAlert('+' + pickEmState.totalRoundPts + ' pts','bg-green-600');
-    dom.pickemSubmitBtn.textContent = round >= 10 ? 'Finish' : 'Next Round';
+    if (!wasCorrect) showAlert('Wrong! Round over','bg-red-500');
+    else showAlert('+' + pickEmState.totalRoundPts + ' pts','bg-green-600');
+    dom.pickemSubmitBtn.textContent = round >= 10 ? 'Finish Game' : 'Next Round';
+    dom.pickemSubmitBtn.disabled = false;
     dom.rerollBtn.disabled = true;
+}
+
+function lockInPickEm() {
+    if (dom.pickemSubmitBtn.textContent === 'Next Round' || dom.pickemSubmitBtn.textContent === 'Finish Game') {
+        round++;
+        startRound();
+        return;
+    }
+    endPickEmRound(true);
 }
 
 // ═══════════════════════════════════════
@@ -1385,17 +1569,17 @@ function endGame() {
     dom.rerollBtn.classList.add('hidden');
     // Ribbon tier
     var tiers = [
-        {min:5000, emoji:'🏆', text:'Platinum — Legendary!', cls:'text-cyan-400'},
-        {min:4000, emoji:'🥇', text:'Gold — Outstanding!', cls:'text-yellow-500'},
-        {min:3000, emoji:'🥈', text:'Silver — Great game!', cls:'text-gray-400'},
-        {min:2000, emoji:'🥉', text:'Bronze — Not bad!', cls:'text-orange-600'},
-        {min:0,    emoji:'😬', text:'Keep practicing!', cls:'text-gray-500'},
+        {min:5000, emoji:'🏆', text:'Platinum Trophy! Legendary!', cls:'score-platinum'},
+        {min:4000, emoji:'🥇', text:'Gold Medal! All-Time Great!', cls:'score-gold'},
+        {min:3000, emoji:'🥈', text:'Silver Medal! Pro Bowl Performance!', cls:'score-silver'},
+        {min:2000, emoji:'🥉', text:'Bronze Medal! Solid Season.', cls:'score-bronze'},
+        {min:0,    emoji:'🧢', text:'Back to the practice squad...', cls:'text-gray-600 dark:text-gray-500'},
     ];
     endGameTier = tiers.find(function(t) { return score >= t.min; });
     if (dom.ribbonEmoji) dom.ribbonEmoji.textContent = endGameTier.emoji;
     if (dom.ribbonText) {
         dom.ribbonText.textContent = endGameTier.text;
-        dom.ribbonText.className = 'text-sm font-bold text-center mb-2 ' + endGameTier.cls;
+        dom.ribbonText.className = 'text-lg font-bold text-center mb-4 ' + endGameTier.cls;
     }
     // Check local high score
     var prevHigh = parseInt(localStorage.getItem('nfl_highscore') || '0', 10);
@@ -1430,21 +1614,40 @@ function renderLeaderboard() {
     var lb = JSON.parse(localStorage.getItem('nfl_leaderboard') || '[]');
     var filterMode = dom.lbFilterMode ? dom.lbFilterMode.value : 'all';
     var filterElig = dom.lbFilterElig ? dom.lbFilterElig.value : 'all';
+    var filterDate = dom.lbFilterDate ? dom.lbFilterDate.value : 'all_time';
     if (filterMode !== 'all') lb = lb.filter(function(e) { return e.mode === filterMode; });
     if (filterElig !== 'all') lb = lb.filter(function(e) { return e.elig === filterElig; });
+    if (filterDate !== 'all_time') {
+        var now = new Date();
+        var startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+        var startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+        var startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).getTime();
+        lb = lb.filter(function(e) {
+            if (!e.ts) return false;
+            if (filterDate === 'today') return e.ts >= startOfDay;
+            if (filterDate === 'this_month') return e.ts >= startOfMonth;
+            if (filterDate === 'last_month') return e.ts >= startOfLastMonth && e.ts < startOfMonth;
+            return true;
+        });
+    }
     var body = dom.lbBody;
     var emptyMsg = dom.lbEmpty;
     body.innerHTML = '';
     if (lb.length === 0) { emptyMsg.classList.remove('hidden'); return; }
     emptyMsg.classList.add('hidden');
     var medals = ['🥇','🥈','🥉'];
+    var savedName = localStorage.getItem('nfl_screenName') || '';
+    var pbFound = false;
     lb.slice(0, 20).forEach(function(entry, i) {
         var tr = document.createElement('tr');
         tr.className = 'leaderboard-row';
         var rank = i < 3 ? medals[i] : (i + 1) + '.';
+        var isPB = !pbFound && savedName && entry.name === savedName;
+        if (isPB) pbFound = true;
+        var pbTag = isPB ? ' <span class="text-[10px] font-black text-emerald-600 dark:text-emerald-400 ml-1">PB</span>' : '';
         tr.innerHTML = '<td class="px-4 py-2 text-center font-bold">' + rank + '</td>'
             + '<td class="px-4 py-2 font-black text-green-600 dark:text-green-400">' + entry.score + '</td>'
-            + '<td class="px-4 py-2">' + (entry.name || 'Anonymous') + '</td>';
+            + '<td class="px-4 py-2">' + (entry.name || 'Anonymous') + pbTag + '</td>';
         body.appendChild(tr);
     });
 }
@@ -1533,6 +1736,7 @@ document.addEventListener('DOMContentLoaded', function() {
     dom.lbEmpty     = document.getElementById('empty-leaderboard-msg');
     dom.lbFilterMode = document.getElementById('lb-filter-mode');
     dom.lbFilterElig = document.getElementById('lb-filter-elig');
+    dom.lbFilterDate = document.getElementById('lb-filter-date');
     // Pick Em
     dom.pickemChainBar = document.getElementById('pickem-chain-bar');
     // Breakdown
@@ -1676,6 +1880,7 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.removeItem('nfl_screenName');
         dom.nameInd.textContent = '';
         dom.clearNameRow.classList.add('hidden');
+        showAlert('Screen name cleared', 'bg-red-600');
     });
     dom.formatRow.addEventListener('click', toggleFormat);
     dom.deadZoneRow.addEventListener('click', toggleDeadZone);
@@ -1683,6 +1888,7 @@ document.addEventListener('DOMContentLoaded', function() {
     updateDeadZoneUI();
     if (dom.lbFilterMode) dom.lbFilterMode.addEventListener('change', renderLeaderboard);
     if (dom.lbFilterElig) dom.lbFilterElig.addEventListener('change', renderLeaderboard);
+    if (dom.lbFilterDate) dom.lbFilterDate.addEventListener('change', renderLeaderboard);
     if (dom.shareBtn) dom.shareBtn.addEventListener('click', function() {
         var modeNames = {howMuch:'How Much?', sideBySide:'Showdown', pickEm:"Pick 'Em"};
         var tier = endGameTier || {emoji:'', text:''};
@@ -1728,6 +1934,33 @@ function toggleFormat() {
     useWholeNumbers = !useWholeNumbers;
     localStorage.setItem('useWholeNumbers', useWholeNumbers);
     updateFormatUI();
+    // Re-render active game UI
+    if (dom.gameScreen && !dom.gameScreen.classList.contains('hidden')) {
+        if (!dom.uiPickem.classList.contains('hidden')) {
+            // Update Pick'Em threshold display
+            var threshEl = dom.pickemThresh;
+            if (threshEl && catKey) {
+                var cc = BASE_CATS[catKey];
+                var op = cc.lowerBetter ? '≤' : '≥';
+                threshEl.textContent = op + ' ' + formatStat(pickEmState.threshold, catKey);
+            }
+            // Update revealed card values
+            dom.pickemGrid.querySelectorAll('.revealed').forEach(function(card) {
+                var rawVal = parseFloat(card.dataset.val);
+                card.querySelector('.stat-val').textContent = formatStat(rawVal, catKey);
+            });
+        } else if (!dom.uiHowMuch.classList.contains('hidden') && A && B) {
+            // Update slider labels
+            dom.dispMin.textContent = formatStat(sliderState.min, catKey);
+            dom.dispMax.textContent = formatStat(sliderState.max, catKey);
+            // Update revealed stats if visible
+            if (!dom.statA.classList.contains('hidden')) {
+                dom.statA.textContent = formatStat(getStat(A, catKey), catKey);
+                dom.statB.textContent = formatStat(getStat(B, catKey), catKey);
+                dom.resultText.textContent = 'Difference: ' + formatStat(trueDiff, catKey);
+            }
+        }
+    }
 }
 function updateFormatUI() {
     if (!dom.formatInd) return;
@@ -1737,7 +1970,26 @@ function toggleDeadZone() {
     deadZoneEnabled = !deadZoneEnabled;
     localStorage.setItem('deadZoneEnabled', deadZoneEnabled);
     updateDeadZoneUI();
-    updateSliderUI();
+    // Recalculate slider if game is active in How Much mode
+    if (dom.gameScreen && !dom.gameScreen.classList.contains('hidden') && A && B && gameMode === 'howMuch') {
+        var curCat = BASE_CATS[catKey];
+        var dMin = curCat.dMin, dMax = dMin * 5, step = curCat.step;
+        var savedMin = sliderState.min, savedMax = sliderState.max;
+        initSlider(dMax, dMin, step);
+        sliderState.min = Math.max(savedMin, dMin);
+        sliderState.max = Math.min(savedMax, dMax);
+        updateSliderUI();
+        // Reposition pin if answer already revealed
+        if (dom.submitBtn.textContent !== 'Lock In') {
+            dom.thumbMin.style.display = 'none';
+            dom.thumbMax.style.display = 'none';
+            var span = sliderState.rangeMax;
+            var pinPct = Math.max(0, Math.min(100, (trueDiff / span) * 100));
+            dom.pin.style.left = pinPct + '%';
+        }
+    } else {
+        updateSliderUI();
+    }
 }
 function updateDeadZoneUI() {
     if (!dom.deadZoneInd) return;
