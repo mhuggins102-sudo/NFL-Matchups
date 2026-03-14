@@ -99,8 +99,7 @@
         .pickem-card.revealed .stat-val { color: inherit !important; }
         .leaderboard-row:nth-child(even) { background-color:rgba(0,0,0,0.05); }
         html.dark .leaderboard-row:nth-child(even) { background-color:rgba(255,255,255,0.02); }
-        .player-card { border:2px solid #d1d5db; }
-        html.dark .player-card { border-color:transparent; }
+        /* player-card border is set via Tailwind classes in HTML */
         #slider-invalid-zone {
             background: repeating-linear-gradient(45deg, #9ca3af, #9ca3af 2px, #d1d5db 2px, #d1d5db 8px);
             opacity: 0.5;
@@ -231,7 +230,7 @@
         <div class="flex justify-between items-start mb-2 px-1">
             <div class="flex flex-col gap-0 mt-0.5">
                 <div class="h-4 flex items-center text-xs font-bold text-gray-600 dark:text-gray-400" id="game-era-label"></div>
-                <div id="game-cat-label" class="text-xs font-bold text-gray-600 dark:text-gray-400 leading-none"></div>
+                <div id="game-cat-label" class="text-xs font-bold text-gray-600 dark:text-gray-400 leading-none tracking-wide mt-1"></div>
             </div>
             <div class="text-right flex flex-col gap-1">
                 <div class="h-4 flex items-center justify-end text-xs font-bold text-gray-600 dark:text-gray-400" id="round-display">Round 1/10</div>
@@ -243,12 +242,12 @@
         <div id="ui-how-much" class="w-full">
             <div id="player-prompt" class="text-center text-sm font-bold text-gray-700 dark:text-gray-400 tracking-wide mb-3 mt-4">Whose is Higher?</div>
             <div class="grid grid-cols-2 gap-3 mb-6">
-                <button id="card-A" class="player-card group relative flex flex-col items-center justify-center p-2 h-16 bg-white dark:bg-gray-800 rounded-2xl shadow-sm transition-all duration-200 active:scale-[0.98]">
-                    <span id="name-A" class="text-sm sm:text-base font-black leading-tight text-center block">Player A</span>
+                <button id="card-A" class="player-card group relative flex flex-col items-center justify-center p-2 h-16 bg-white dark:bg-gray-800 rounded-2xl border-2 border-gray-300 dark:border-transparent shadow-sm transition-all duration-200 active:scale-[0.98]">
+                    <span id="name-A" class="text-sm sm:text-base font-black leading-tight text-center block group-hover:scale-105 transition-transform">Player A</span>
                     <div class="stat-reveal mt-1 text-xs font-semibold hidden text-gray-600 dark:text-gray-300" id="stat-A">--</div>
                 </button>
-                <button id="card-B" class="player-card group relative flex flex-col items-center justify-center p-2 h-16 bg-white dark:bg-gray-800 rounded-2xl shadow-sm transition-all duration-200 active:scale-[0.98]">
-                    <span id="name-B" class="text-sm sm:text-base font-black leading-tight text-center block">Player B</span>
+                <button id="card-B" class="player-card group relative flex flex-col items-center justify-center p-2 h-16 bg-white dark:bg-gray-800 rounded-2xl border-2 border-gray-300 dark:border-transparent shadow-sm transition-all duration-200 active:scale-[0.98]">
+                    <span id="name-B" class="text-sm sm:text-base font-black leading-tight text-center block group-hover:scale-105 transition-transform">Player B</span>
                     <div class="stat-reveal mt-1 text-xs font-semibold hidden text-gray-600 dark:text-gray-300" id="stat-B">--</div>
                 </button>
             </div>
@@ -277,15 +276,19 @@
                         <div id="slider-invalid-zone" style="position:absolute;left:0;top:0;height:100%;width:0%;z-index:10;border-right:1px solid #6b7280;"></div>
                         <div class="absolute h-full rounded-full" style="background:rgba(22,163,74,0.45);display:none;" id="slider-fill-bar"></div>
                         <div class="absolute h-full rounded-full" style="background:#f59e0b;opacity:0.9;display:none;" id="slider-bullseye-zone"></div>
-                        <div class="absolute" style="width:4px;height:28px;top:-8px;background:#10b981;border-radius:2px;transform:translateX(-50%);display:none;box-shadow:0 0 8px rgba(16,185,129,0.6);" id="slider-answer-pin"></div>
+                        <div id="slider-answer-pin" class="absolute top-[6px] w-1.5 h-7 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.8)] hidden z-30 pointer-events-none transform -translate-x-1/2 transition-all duration-500 border border-white dark:border-gray-900">
+                            <div id="slider-result-text" class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-0 text-sm font-black whitespace-nowrap bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 opacity-0 text-gray-900 dark:text-white"></div>
+                        </div>
                     </div>
                     <div id="thumb-min" class="absolute rounded-full bg-white border-2 border-green-500 shadow-md cursor-grab" style="width:1.5rem;height:1.5rem;top:1.5rem;transform:translate(-50%,-50%);z-index:20;"></div>
                     <div id="thumb-max" class="absolute rounded-full bg-white border-2 border-green-500 shadow-md cursor-grab" style="width:1.5rem;height:1.5rem;top:1.5rem;transform:translate(-50%,-50%);z-index:20;"></div>
                     <div id="slider-ticks" class="absolute w-full" style="top:2.75rem;"></div>
                 </div>
-                <div id="slider-result-text" class="hidden absolute left-1/2 -translate-x-1/2 -top-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1 text-xs font-bold shadow-sm whitespace-nowrap z-50" style="opacity:0"></div>
             </div>
             <button id="submit-btn" class="primary-btn" disabled>Lock In</button>
+            <div class="mt-4 flex items-center justify-center gap-2 min-h-[2rem] flex-wrap">
+                <div id="round-feedback" class="flex flex-col items-center space-y-1"></div>
+            </div>
         </div>
 
         <!-- SHOWDOWN UI -->
@@ -931,13 +934,15 @@ function updateSliderUI() {
     dom.fillBar.style.display = 'block';
     dom.dispMin.textContent = formatStat(sliderState.min, catKey);
     dom.dispMax.textContent = formatStat(sliderState.max, catKey);
-    // Bullseye zone
-    var bull = BASE_BULL[catKey] || (sliderState.rangeMax * 0.05);
-    var bMin = Math.max(0, trueDiff - bull), bMax = trueDiff + bull;
-    var bMinPct = Math.max(0, Math.min(100, (bMin / span) * 100));
-    var bMaxPct = Math.max(0, Math.min(100, (bMax / span) * 100));
-    dom.bullseye.style.left  = bMinPct + '%';
-    dom.bullseye.style.width = (bMaxPct - bMinPct) + '%';
+    // Bullseye zone — centered on user's range midpoint, width = rangeMax / 10
+    var bullWidth = sliderState.rangeMax / 10;
+    var mid = (sliderState.min + sliderState.max) / 2;
+    var bL = Math.max(0, mid - bullWidth / 2);
+    var bR = Math.min(sliderState.rangeMax, mid + bullWidth / 2);
+    var bLPct = (bL / span) * 100;
+    var bRPct = (bR / span) * 100;
+    dom.bullseye.style.left  = bLPct + '%';
+    dom.bullseye.style.width = (bRPct - bLPct) + '%';
     dom.bullseye.style.display = 'block';
     if (useAnimations) dom.bullseye.classList.add('animate-bullseye');
     // Dead zone
@@ -1176,12 +1181,13 @@ function shuffle(arr) {
 function calcHowMuchScore(diff, min, max) {
     if (diff < min || diff > max) return 0;
     var curCat = BASE_CATS[catKey];
-    var scoringSpan = (curCat.dMin * 5) - curCat.dMin;
+    var rangeMax = curCat.dMin * 5;
+    var scoringSpan = rangeMax - curCat.dMin;
     var rangeWidth = max - min;
     var safeSpan = scoringSpan > 0 ? scoringSpan : 1;
     var norm = Math.max(0, Math.min(1, (safeSpan - rangeWidth) / safeSpan));
     var rangePts = Math.round(800 * Math.pow(norm, 2));
-    var bw = BASE_BULL[catKey] || 0;
+    var bw = rangeMax / 10;
     var mid = (min + max) / 2, eps = 1e-5;
     var bullPts = (diff >= mid - bw / 2 - eps && diff <= mid + bw / 2 + eps) ? 100 : 0;
     return Math.min(1000, Math.max(0, 200 + rangePts + bullPts));
@@ -1208,8 +1214,10 @@ function startRound() {
         dom.nameB.textContent = B.name;
         dom.statA.textContent = '--'; dom.statA.classList.add('hidden');
         dom.statB.textContent = '--'; dom.statB.classList.add('hidden');
-        dom.cardA.className = 'player-card group relative flex flex-col items-center justify-center p-2 h-16 bg-white dark:bg-gray-800 rounded-2xl shadow-sm transition-all duration-200 active:scale-[0.98]';
-        dom.cardB.className = dom.cardA.className;
+        var baseCardClass = 'player-card group relative flex flex-col items-center justify-center p-2 h-16 bg-white dark:bg-gray-800 rounded-2xl border-2 border-gray-300 dark:border-transparent shadow-sm transition-all duration-200 active:scale-[0.98]';
+        dom.cardA.className = baseCardClass;
+        dom.cardB.className = baseCardClass;
+        dom.cardA.style.opacity = ''; dom.cardB.style.opacity = '';
         var dir = cat.lowerBetter ? 'Lower' : 'Higher';
         dom.prompt.innerHTML = 'Whose <button onclick="showAlert(\'' + cat.label.replace(/'/g, '') + '\', \'bg-gray-700\')" class="underline decoration-dotted font-black text-green-600 dark:text-green-400">' + cat.label + '</button> is ' + dir + '?';
         correctPick = null;
@@ -1218,9 +1226,12 @@ function startRound() {
         trueDiff = Math.abs(sA - sB);
         var dMin = cat.dMin, dMax = cat.dMin * 5;
         initSlider(dMax, dMin, cat.step);
-        dom.pin.style.display = 'none';
+        dom.pin.classList.add('hidden');
+        dom.pin.className = 'absolute top-[6px] w-1.5 h-7 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.8)] hidden z-30 pointer-events-none transform -translate-x-1/2 transition-all duration-500 border border-white dark:border-gray-900';
+        dom.resultText.style.opacity = '0';
         dom.bullseye.classList.remove('animate-bullseye');
-        dom.resultText.classList.add('hidden'); dom.resultText.classList.remove('animate-float-result'); dom.resultText.style.opacity = '0';
+        dom.thumbMin.style.display = ''; dom.thumbMax.style.display = '';
+        if (dom.feedback) dom.feedback.innerHTML = '';
         dom.submitBtn.textContent = 'Lock In'; dom.submitBtn.disabled = true;
         dom.submitBtn.onclick = lockInHowMuch;
         showUI('howMuch');
@@ -1284,12 +1295,15 @@ function showUI(mode) {
 }
 
 function onCardClick(which) {
-    if (userPickHowMuch !== null) return; // already picked
+    if (dom.submitBtn.textContent !== 'Lock In') return; // already locked in
     userPickHowMuch = which;
+    // Clear previous selection from both cards
+    [dom.cardA, dom.cardB].forEach(function(c) {
+        c.classList.remove('ring-4','ring-green-500','bg-green-50','dark:bg-green-900/20');
+        c.style.opacity = '';
+    });
     var selectedCard = which === 'A' ? dom.cardA : dom.cardB;
-    var otherCard    = which === 'A' ? dom.cardB : dom.cardA;
-    selectedCard.className = selectedCard.className + ' border-green-500 bg-green-50 dark:bg-green-900/20';
-    otherCard.style.opacity = '0.6';
+    selectedCard.classList.add('ring-4','ring-green-500');
     dom.submitBtn.disabled = false;
     dom.prompt.textContent = 'By How Much?';
 }
@@ -1300,41 +1314,168 @@ function lockInHowMuch() {
         startRound();
         return;
     }
+    dom.submitBtn.disabled = true;
+    dom.rerollBtn.disabled = true;
+    dom.thumbMin.style.display = 'none';
+    dom.thumbMax.style.display = 'none';
+
     var diff = trueDiff;
-    // Determine actual correct answer now
     var sA = getStat(A, catKey), sB = getStat(B, catKey);
     var cat = BASE_CATS[catKey];
     correctPick = (cat.lowerBetter ? sA < sB : sA > sB) ? 'A' : 'B';
-    var isCorrect = userPickHowMuch === correctPick;
-    // Apply correct/incorrect card styling
-    var pickedCard   = userPickHowMuch === 'A' ? dom.cardA : dom.cardB;
-    var unpickedCard = userPickHowMuch === 'A' ? dom.cardB : dom.cardA;
-    unpickedCard.style.opacity = '1';
-    if (isCorrect) {
-        pickedCard.className = pickedCard.className + ' border-green-500 bg-green-50 dark:bg-green-900/20';
-    } else {
-        pickedCard.className = pickedCard.className.replace(' border-green-500 bg-green-50 dark:bg-green-900/20', '') + ' border-red-500 bg-red-50 dark:bg-red-900/20';
-        unpickedCard.className = unpickedCard.className + ' border-green-500 bg-green-50 dark:bg-green-900/20';
+    var playerCorrect = userPickHowMuch === correctPick;
+    var rangeCorrect = playerCorrect && (diff >= sliderState.min && diff <= sliderState.max);
+    var pts = playerCorrect ? calcHowMuchScore(diff, sliderState.min, sliderState.max) : 0;
+    var pinPct = Math.min(100, (diff / sliderState.rangeMax) * 100);
+    var diffText = formatStat(diff, catKey);
+
+    // Determine bullseye
+    var bw = sliderState.rangeMax / 10;
+    var mid = (sliderState.min + sliderState.max) / 2, eps = 1e-5;
+    var isBullseye = rangeCorrect && (diff >= mid - bw / 2 - eps && diff <= mid + bw / 2 + eps);
+
+    // Card styling helpers
+    var winnerCard = correctPick === 'A' ? dom.cardA : dom.cardB;
+    var loserCard  = correctPick === 'A' ? dom.cardB : dom.cardA;
+    var winnerStat = correctPick === 'A' ? dom.statA : dom.statB;
+    var loserStat  = correctPick === 'A' ? dom.statB : dom.statA;
+    var winnerVal  = correctPick === 'A' ? sA : sB;
+    var loserVal   = correctPick === 'A' ? sB : sA;
+    var styleGreenArr = ['bg-green-100','dark:bg-green-900/40','border-green-600','dark:border-green-500','text-green-800','dark:text-green-300'];
+    var styleRedArr   = ['bg-red-100','dark:bg-red-900/40','border-red-500','dark:border-red-500','text-red-800','dark:text-red-300'];
+
+    function setCardStyles() {
+        [dom.cardA, dom.cardB].forEach(function(c) {
+            c.classList.remove('ring-4','ring-green-500','bg-green-50','dark:bg-green-900/20','bg-white','dark:bg-gray-800','border-gray-300','dark:border-transparent');
+        });
+        winnerCard.classList.add('border-2');
+        styleGreenArr.forEach(function(c) { winnerCard.classList.add(c); });
+        if (!playerCorrect) {
+            styleRedArr.forEach(function(c) { (userPickHowMuch === 'A' ? dom.cardA : dom.cardB).classList.add(c); });
+        }
+        loserCard.classList.add('opacity-50','bg-gray-100','dark:bg-gray-800','border-transparent');
     }
-    var pts = isCorrect ? calcHowMuchScore(diff, sliderState.min, sliderState.max) : 0;
-    // Show answer pin
-    var pct = Math.min(100, (diff / sliderState.rangeMax) * 100);
-    dom.pin.style.left = pct + '%';
-    dom.pin.style.display = 'block';
-    // Show stats
-    dom.statA.textContent = formatStat(getStat(A, catKey), catKey);
-    dom.statA.classList.remove('hidden');
-    dom.statB.textContent = formatStat(getStat(B, catKey), catKey);
-    dom.statB.classList.remove('hidden');
-    dom.resultText.textContent = 'Difference: ' + formatStat(diff, catKey);
-    dom.resultText.classList.remove('hidden');
-    dom.resultText.style.opacity = '1';
-    if (useAnimations) dom.resultText.classList.add('animate-float-result');
-    // Make names clickable
-    dom.nameA.innerHTML = '<a href="' + makeLink(A) + '" target="_blank" class="underline">' + A.name + '</a>';
-    dom.nameB.innerHTML = '<a href="' + makeLink(B) + '" target="_blank" class="underline">' + B.name + '</a>';
-    roundResults.push({round:round, pts:pts, cat:BASE_CATS[catKey].label, pA:A.name, pB:B.name, correct:isCorrect, diff:diff, min:sliderState.min, max:sliderState.max});
-    finishRound(pts);
+
+    function showPinAndResults(animated) {
+        dom.nameA.innerHTML = '<a href="' + makeLink(A) + '" target="_blank" class="underline">' + A.name + '</a>';
+        dom.nameB.innerHTML = '<a href="' + makeLink(B) + '" target="_blank" class="underline">' + B.name + '</a>';
+    }
+
+    // Calculate range pts for feedback display
+    var rangePts = pts - 200 - (isBullseye ? 100 : 0);
+    if (rangePts < 0) rangePts = 0;
+
+    roundResults.push({round:round, pts:pts, cat:BASE_CATS[catKey].label, pA:A.name, pB:B.name, correct:playerCorrect, diff:diff, min:sliderState.min, max:sliderState.max});
+
+    dom.feedback.innerHTML = '';
+
+    // ── INSTANT MODE (animations off) ──
+    if (!useAnimations) {
+        setCardStyles();
+        dom.statA.textContent = formatStat(sA, catKey); dom.statA.classList.remove('hidden');
+        dom.statB.textContent = formatStat(sB, catKey); dom.statB.classList.remove('hidden');
+        showPinAndResults(false);
+        dom.pin.style.transition = 'none';
+        dom.pin.style.left = pinPct + '%';
+        dom.pin.classList.remove('hidden'); dom.pin.style.display = '';
+        var pinColor = rangeCorrect ? 'bg-green-500' : (playerCorrect ? 'bg-orange-500' : 'bg-red-500');
+        var txtColor = rangeCorrect ? 'text-green-500' : (playerCorrect ? 'text-orange-500' : 'text-red-500');
+        dom.pin.className = 'absolute top-[6px] w-1.5 h-7 rounded-full shadow-lg z-30 transform -translate-x-1/2 border border-white dark:border-gray-900 ' + pinColor;
+        dom.resultText.textContent = diffText;
+        dom.resultText.className = 'absolute bottom-full left-1/2 transform -translate-x-1/2 mb-0 text-sm font-black whitespace-nowrap bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 opacity-1 ' + txtColor;
+        var fb = '';
+        if (playerCorrect) {
+            fb = '<div class="text-green-600 dark:text-green-400 font-bold text-sm">Correct Player +200</div>';
+            if (rangeCorrect) fb += '<div class="text-green-600 dark:text-green-400 font-bold text-sm mt-1">Within Range +' + rangePts + '</div>';
+            if (isBullseye) fb += '<div class="text-amber-500 font-black text-lg mt-1">BULLSEYE! +100</div>';
+        } else {
+            fb = '<div class="text-red-500 font-bold text-sm">Incorrect Player</div>';
+        }
+        dom.feedback.innerHTML = fb;
+        finishRound(pts);
+        return;
+    }
+
+    // ── ANIMATED MODE ──
+    // Wrong player — quick reveal
+    if (!playerCorrect) {
+        setCardStyles();
+        dom.statA.textContent = formatStat(sA, catKey); dom.statA.classList.remove('hidden');
+        dom.statB.textContent = formatStat(sB, catKey); dom.statB.classList.remove('hidden');
+        showPinAndResults(false);
+        dom.pin.style.transition = 'none';
+        dom.pin.style.left = pinPct + '%';
+        dom.pin.classList.remove('hidden'); dom.pin.style.display = '';
+        dom.pin.className = 'absolute top-[6px] w-1.5 h-7 rounded-full shadow-lg z-30 transform -translate-x-1/2 border border-white dark:border-gray-900 bg-red-500';
+        dom.resultText.textContent = diffText;
+        dom.resultText.className = 'absolute bottom-full left-1/2 transform -translate-x-1/2 mb-0 text-sm font-black whitespace-nowrap bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 opacity-0 text-red-500 animate-float-result';
+        dom.feedback.innerHTML = '<div class="text-red-500 font-bold text-sm animate-enter">Incorrect Player</div>';
+        setTimeout(function() { finishRound(pts); }, 1000);
+        return;
+    }
+
+    // Correct player — animated sequence
+    winnerCard.classList.remove('bg-white','dark:bg-gray-800','border-gray-300','dark:border-transparent','ring-4','ring-green-500','bg-green-50','dark:bg-green-900/20');
+    winnerCard.classList.add('border-2');
+    styleGreenArr.forEach(function(c) { winnerCard.classList.add(c); });
+    loserCard.classList.remove('ring-4','ring-green-500','bg-green-50','dark:bg-green-900/20','border-gray-300','dark:border-transparent');
+    loserCard.classList.add('opacity-50','bg-gray-100','dark:bg-gray-800','border-transparent');
+    winnerStat.textContent = formatStat(winnerVal, catKey);
+    winnerStat.classList.remove('hidden');
+
+    // Stage 1 (500ms): "Correct Player +200"
+    setTimeout(function() {
+        var line1 = document.createElement('div');
+        line1.className = 'text-green-600 dark:text-green-400 font-bold text-sm animate-text-pop';
+        line1.textContent = 'Correct Player +200';
+        dom.feedback.appendChild(line1);
+    }, 500);
+
+    // Stage 2 (1000ms): Pin animation
+    setTimeout(function() {
+        var duration = pinPct / 25;
+        if (duration < 0.5) duration = 0.5;
+        dom.pin.style.transition = 'none';
+        dom.pin.style.left = '0%';
+        dom.pin.classList.remove('hidden'); dom.pin.style.display = '';
+        dom.pin.className = 'absolute top-[6px] w-1.5 h-7 rounded-full shadow-lg z-30 transform -translate-x-1/2 border border-white dark:border-gray-900 bg-gray-400';
+        void dom.pin.offsetWidth; // force reflow
+        dom.pin.style.transition = 'left ' + duration + 's ease-out';
+        dom.pin.style.left = pinPct + '%';
+
+        // Stage 3 (after pin arrives): Show results
+        setTimeout(function() {
+            var pinClr = rangeCorrect ? 'bg-green-500' : 'bg-orange-500';
+            var txtClr = rangeCorrect ? 'text-green-500' : 'text-orange-500';
+            dom.pin.classList.remove('bg-gray-400');
+            dom.pin.classList.add(pinClr);
+            dom.resultText.textContent = diffText;
+            dom.resultText.className = 'absolute bottom-full left-1/2 transform -translate-x-1/2 mb-0 text-sm font-black whitespace-nowrap bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 opacity-0 ' + txtClr + ' animate-float-result';
+            loserStat.textContent = formatStat(loserVal, catKey);
+            loserStat.classList.remove('hidden');
+            showPinAndResults(true);
+
+            if (rangeCorrect) {
+                var line2 = document.createElement('div');
+                line2.className = 'text-green-600 dark:text-green-400 font-bold text-sm animate-text-pop';
+                line2.textContent = 'Within Range +' + rangePts;
+                dom.feedback.appendChild(line2);
+            }
+
+            var nextDelay = 1000;
+            if (isBullseye) {
+                setTimeout(function() {
+                    var line3 = document.createElement('div');
+                    line3.className = 'text-amber-500 font-black text-lg animate-bullseye mt-1';
+                    line3.textContent = 'BULLSEYE! +100';
+                    dom.feedback.appendChild(line3);
+                }, 1000);
+                nextDelay += 1000;
+            }
+
+            setTimeout(function() { finishRound(pts); }, nextDelay);
+        }, duration * 1000);
+    }, 1000);
 }
 
 function finishRound(pts) {
@@ -1704,6 +1845,7 @@ document.addEventListener('DOMContentLoaded', function() {
     dom.dispMax     = document.getElementById('slider-display-max');
     dom.sliderArea  = document.getElementById('slider-touch-area');
     dom.resultText  = document.getElementById('slider-result-text');
+    dom.feedback    = document.getElementById('round-feedback');
     dom.submitBtn   = document.getElementById('submit-btn');
     // Showdown
     dom.sbsNameA    = document.getElementById('sbs-name-a');
@@ -1957,7 +2099,7 @@ function toggleFormat() {
             if (!dom.statA.classList.contains('hidden')) {
                 dom.statA.textContent = formatStat(getStat(A, catKey), catKey);
                 dom.statB.textContent = formatStat(getStat(B, catKey), catKey);
-                dom.resultText.textContent = 'Difference: ' + formatStat(trueDiff, catKey);
+                dom.resultText.textContent = formatStat(trueDiff, catKey);
             }
         }
     }
