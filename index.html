@@ -33,6 +33,7 @@
             --color-platinum: #80e0e0;
         }
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        a.text-inherit, a.text-inherit:visited, a.text-inherit:active { color:inherit; font:inherit; text-decoration:none; }
         @keyframes fade-in-up { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
         .animate-enter { animation: fade-in-up 0.3s ease-out forwards; }
         @keyframes score-pop { 0%{transform:scale(1);}50%{transform:scale(1.5);}100%{transform:scale(1);} }
@@ -304,10 +305,10 @@
 
         <!-- SHOWDOWN UI -->
         <div id="ui-showdown" class="w-full hidden">
-            <div class="grid grid-cols-3 gap-1 mb-2 mt-4 text-center items-end">
+            <div class="sbs-grid mb-1 mt-4 px-3">
                 <div></div>
-                <div id="sbs-name-a" class="text-sm font-black leading-tight text-gray-700 dark:text-gray-200"></div>
-                <div id="sbs-name-b" class="text-sm font-black leading-tight text-gray-700 dark:text-gray-200"></div>
+                <div id="sbs-name-a" class="text-sm font-black leading-tight text-gray-700 dark:text-gray-200 text-center"></div>
+                <div id="sbs-name-b" class="text-sm font-black leading-tight text-gray-700 dark:text-gray-200 text-center"></div>
             </div>
             <div id="sbs-grid-container" class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-300 dark:border-gray-800 p-3 mb-4 space-y-2"></div>
             <button id="sbs-submit-btn" class="primary-btn" disabled>Lock In</button>
@@ -320,8 +321,8 @@
         <div id="ui-pickem" class="w-full hidden">
             <div id="pickem-prompt-container" class="text-center text-sm font-bold text-gray-700 dark:text-gray-400 tracking-wide mb-3 mt-4"></div>
             <div id="pickem-grid" class="grid grid-cols-2 gap-2 mb-4"></div>
-            <div id="pickem-chain-bar" class="hidden text-center text-xs font-bold text-amber-600 dark:text-amber-400 mt-2 mb-2"></div>
             <button id="pickem-submit-btn" class="primary-btn" disabled>Next Round</button>
+            <div id="pickem-chain-bar" class="hidden text-center text-xs font-bold text-amber-600 dark:text-amber-400 mt-2"></div>
             <div class="mt-4 flex items-center justify-center gap-2 min-h-[2rem] flex-wrap">
                 <div id="pickem-feedback" class="flex flex-col items-center space-y-1"></div>
             </div>
@@ -711,10 +712,19 @@ function buildPlayers(people, stats, legends) {
     });
 
     // Merge legends (override nflverse partial data)
+    // Build name→nflverse ID lookup to remove duplicates
+    var nameToNflverseID = {};
+    Object.keys(playerMap).forEach(function(pid) {
+        nameToNflverseID[playerMap[pid].name] = pid;
+    });
     Object.keys(legendPeople).forEach(function(pid) {
         var row = legendPeople[pid];
         var pos = row.pos;
         if (pos !== 'QB' && pos !== 'RB' && pos !== 'WR' && pos !== 'TE') return;
+
+        // Remove nflverse duplicate if same name exists with different ID
+        var nflID = nameToNflverseID[row.name];
+        if (nflID && nflID !== pid) delete playerMap[nflID];
 
         var decades = row.decades ? row.decades.split('|').map(Number) : [];
         var p = {
@@ -765,48 +775,48 @@ function loadAllData(onDone) {
 // ═══════════════════════════════════════
 var BASE_CATS = {
     // QB
-    careerPassYards:    {label:'Career Pass Yards',    type:'QB',  dMin:5000, step:500, thresholds:[15000,20000,25000,30000,35000,40000,50000,60000], tolerance:0.20, minBuffer:5000},
-    careerPassTDs:      {label:'Career Pass TDs',      type:'QB',  dMin:25,   step:1,   thresholds:[100,150,200,250,300,350,400,500], tolerance:0.25, minBuffer:30},
-    careerINTs:         {label:'Career INTs',          type:'QB',  dMin:15,   step:1,   lowerBetter:true, thresholds:[300,250,200,150,100,75,50], tolerance:0.25, minBuffer:20},
-    careerPasserRating: {label:'Career Passer Rating', type:'QB',  dMin:3.0,  step:0.1, thresholds:[70,75,80,85,90,95,100,105], tolerance:0.10, minBuffer:5.0},
-    careerCompPct:      {label:'Career Comp %',        type:'QB',  dMin:0.030,step:0.005,thresholds:[0.52,0.55,0.58,0.60,0.62,0.65,0.68], tolerance:0.08, minBuffer:0.04},
-    careerSacks:        {label:'Career Sacks Taken',   type:'QB',  dMin:20,   step:5,   lowerBetter:true, thresholds:[500,400,300,200,150,100,50], tolerance:0.25, minBuffer:25},
-    careerGamesStarted: {label:'Career Starts',        type:'QB',  dMin:20,   step:1,   thresholds:[64,80,100,120,150,200,230], tolerance:0.25, minBuffer:25},
-    careerQBRushYards:  {label:'Career Rush Yards',    type:'QB',  dMin:300,  step:100, thresholds:[500,1000,2000,3000,4000,5000,6000], tolerance:0.30, minBuffer:400},
-    seasonHighPassYards:{label:'High Season Pass Yds', type:'QB',  dMin:500,  step:100, thresholds:[3000,3500,4000,4500,5000,5500], tolerance:0.18, minBuffer:500},
-    seasonHighPassTDs:  {label:'High Season Pass TDs', type:'QB',  dMin:5,    step:1,   thresholds:[20,25,30,35,40,45,50], tolerance:0.20, minBuffer:6},
+    careerPassYards:    {label:'Career Pass Yards',    type:'QB',  dMin:4000, step:500, thresholds:[18000,22000,27000,32000,38000,45000,55000], tolerance:0.18, minBuffer:4000},
+    careerPassTDs:      {label:'Career Pass TDs',      type:'QB',  dMin:20,   step:1,   thresholds:[90,130,170,220,280,350,420], tolerance:0.20, minBuffer:25},
+    careerINTs:         {label:'Career INTs',          type:'QB',  dMin:12,   step:1,   lowerBetter:true, thresholds:[250,200,150,110,80,60], tolerance:0.22, minBuffer:18},
+    careerPasserRating: {label:'Career Passer Rating', type:'QB',  dMin:2.5,  step:0.1, thresholds:[75,80,84,87,90,93,97], tolerance:0.06, minBuffer:3.0},
+    careerCompPct:      {label:'Career Comp %',        type:'QB',  dMin:0.025,step:0.005,thresholds:[0.56,0.58,0.60,0.62,0.64,0.66], tolerance:0.06, minBuffer:0.03},
+    careerSacks:        {label:'Career Sacks Taken',   type:'QB',  dMin:18,   step:5,   lowerBetter:true, thresholds:[400,300,220,170,130,80], tolerance:0.22, minBuffer:25},
+    careerGamesStarted: {label:'Career Starts',        type:'QB',  dMin:15,   step:1,   thresholds:[80,100,120,150,180,220], tolerance:0.20, minBuffer:20},
+    careerQBRushYards:  {label:'Career Rush Yards',    type:'QB',  dMin:250,  step:100, thresholds:[600,1000,1500,2200,3200,4500], tolerance:0.25, minBuffer:350},
+    seasonHighPassYards:{label:'High Season Pass Yds', type:'QB',  dMin:400,  step:100, thresholds:[3200,3600,4000,4400,4800], tolerance:0.15, minBuffer:400},
+    seasonHighPassTDs:  {label:'High Season Pass TDs', type:'QB',  dMin:4,    step:1,   thresholds:[22,26,30,34,38,44], tolerance:0.18, minBuffer:5},
     // RB
-    careerRushYards:    {label:'Career Rush Yards',    type:'RB',  dMin:1500, step:100, thresholds:[3000,5000,7000,9000,11000,13000,15000], tolerance:0.20, minBuffer:1500},
-    careerRushTDs:      {label:'Career Rush TDs',      type:'RB',  dMin:15,   step:1,   thresholds:[30,50,75,100,125,150,175], tolerance:0.25, minBuffer:15},
-    careerYPC:          {label:'Career Yards/Carry',   type:'RB',  dMin:0.30, step:0.05,thresholds:[3.5,3.8,4.0,4.2,4.5,4.8,5.0,5.5], tolerance:0.12, minBuffer:0.40},
-    careerRushAttempts: {label:'Career Rush Attempts', type:'RB',  dMin:300,  step:50,  thresholds:[750,1000,1500,2000,2500,3000,3500], tolerance:0.20, minBuffer:300},
-    seasonHighRushYards:{label:'High Season Rush Yds', type:'RB',  dMin:200,  step:50,  thresholds:[500,700,900,1000,1200,1400,1600,1800,2000], tolerance:0.20, minBuffer:200},
-    careerFumbles:      {label:'Career Fumbles',       type:'RB',  dMin:5,    step:1,   lowerBetter:true, thresholds:[100,80,60,40,25,15], tolerance:0.30, minBuffer:8},
+    careerRushYards:    {label:'Career Rush Yards',    type:'RB',  dMin:1200, step:100, thresholds:[4000,5500,7000,9000,11000,14000], tolerance:0.18, minBuffer:1200},
+    careerRushTDs:      {label:'Career Rush TDs',      type:'RB',  dMin:10,   step:1,   thresholds:[25,35,50,65,85,110], tolerance:0.22, minBuffer:10},
+    careerYPC:          {label:'Career Yards/Carry',   type:'RB',  dMin:0.15, step:0.05,thresholds:[3.9,4.0,4.2,4.3,4.5,4.7], tolerance:0.06, minBuffer:0.20},
+    careerRushAttempts: {label:'Career Rush Attempts', type:'RB',  dMin:200,  step:50,  thresholds:[900,1200,1500,2000,2500,3200], tolerance:0.18, minBuffer:250},
+    seasonHighRushYards:{label:'High Season Rush Yds', type:'RB',  dMin:150,  step:50,  thresholds:[1000,1100,1250,1400,1600,1900], tolerance:0.15, minBuffer:150},
+    careerFumbles:      {label:'Career Fumbles',       type:'RB',  dMin:4,    step:1,   lowerBetter:true, thresholds:[35,25,18,14,10], tolerance:0.25, minBuffer:5},
     // Skill (WR/TE)
-    careerRecYards:     {label:'Career Rec Yards',     type:'skill',dMin:1500, step:100, thresholds:[3000,5000,7000,9000,11000,13000,15000], tolerance:0.20, minBuffer:1500},
-    careerReceptions:   {label:'Career Receptions',    type:'skill',dMin:75,   step:10,  thresholds:[200,400,600,800,1000,1200,1500], tolerance:0.20, minBuffer:100},
-    careerRecTDs:       {label:'Career Rec TDs',       type:'skill',dMin:10,   step:1,   thresholds:[25,50,75,100,125,150,175,200], tolerance:0.25, minBuffer:15},
-    careerYPR:          {label:'Career Yards/Rec',     type:'skill',dMin:1.0,  step:0.1, thresholds:[10,11,12,13,14,15,16,17,18], tolerance:0.12, minBuffer:1.5},
-    seasonHighRecYards: {label:'High Season Rec Yds',  type:'skill',dMin:200,  step:50,  thresholds:[500,700,900,1000,1200,1400,1600,1800], tolerance:0.20, minBuffer:200},
-    seasonHighReceptions:{label:'High Season Recs',   type:'skill',dMin:10,   step:5,   thresholds:[40,60,80,100,120,140], tolerance:0.18, minBuffer:12},
+    careerRecYards:     {label:'Career Rec Yards',     type:'skill',dMin:1200, step:100, thresholds:[3500,5000,7000,9000,11000,14000], tolerance:0.18, minBuffer:1200},
+    careerReceptions:   {label:'Career Receptions',    type:'skill',dMin:60,   step:10,  thresholds:[300,400,550,700,900,1100], tolerance:0.18, minBuffer:80},
+    careerRecTDs:       {label:'Career Rec TDs',       type:'skill',dMin:8,    step:1,   thresholds:[20,30,45,60,80,110], tolerance:0.22, minBuffer:10},
+    careerYPR:          {label:'Career Yards/Rec',     type:'skill',dMin:0.8,  step:0.1, thresholds:[11,12,13,14,15,16], tolerance:0.08, minBuffer:1.0},
+    seasonHighRecYards: {label:'High Season Rec Yds',  type:'skill',dMin:150,  step:50,  thresholds:[750,900,1050,1200,1400,1600], tolerance:0.15, minBuffer:150},
+    seasonHighReceptions:{label:'High Season Recs',   type:'skill',dMin:8,    step:5,   thresholds:[60,75,85,100,115], tolerance:0.15, minBuffer:10},
     // New stats
-    careerTargets:      {label:'Career Targets',       type:'skill',dMin:50,   step:10,  thresholds:[100,200,400,600,800,1000,1200], tolerance:0.20, minBuffer:100},
-    careerTotalTDs:     {label:'Career Total TDs',     type:'RB',   dMin:10,   step:1,   thresholds:[20,40,60,80,100,125,150], tolerance:0.25, minBuffer:15},
-    seasonHighRecTDs:   {label:'High Season Rec TDs',  type:'skill',dMin:3,    step:1,   thresholds:[4,6,8,10,12,14,16], tolerance:0.25, minBuffer:3},
-    seasonHighRushTDs:  {label:'High Season Rush TDs', type:'RB',   dMin:3,    step:1,   thresholds:[5,8,10,12,15,18,20], tolerance:0.25, minBuffer:3},
+    careerTargets:      {label:'Career Targets',       type:'skill',dMin:40,   step:10,  thresholds:[350,500,650,800,1000,1200], tolerance:0.18, minBuffer:80},
+    careerTotalTDs:     {label:'Career Total TDs',     type:'RB',   dMin:8,    step:1,   thresholds:[30,45,60,75,95,120], tolerance:0.22, minBuffer:12},
+    seasonHighRecTDs:   {label:'High Season Rec TDs',  type:'skill',dMin:2,    step:1,   thresholds:[6,8,10,12,14], tolerance:0.20, minBuffer:2},
+    seasonHighRushTDs:  {label:'High Season Rush TDs', type:'RB',   dMin:2,    step:1,   thresholds:[8,10,12,14,17], tolerance:0.20, minBuffer:3},
     // Universal
-    seasons:            {label:'Seasons Played',       type:'both', dMin:2,    step:1,   thresholds:[5,7,9,12,15,18,20], tolerance:0.30, minBuffer:2},
+    seasons:            {label:'Seasons Played',       type:'both', dMin:2,    step:1,   thresholds:[7,9,11,13,16], tolerance:0.25, minBuffer:2},
 };
 
 var BASE_BULL = {
-    careerPassYards:500, careerPassTDs:5, careerINTs:5, careerPasserRating:1.5,
-    careerCompPct:0.01, careerSacks:5, careerGamesStarted:5, careerQBRushYards:100,
-    seasonHighPassYards:100, seasonHighPassTDs:2,
-    careerRushYards:300, careerRushTDs:5, careerYPC:0.1, careerRushAttempts:50,
-    seasonHighRushYards:50, careerFumbles:3,
-    careerRecYards:300, careerReceptions:20, careerRecTDs:5, careerYPR:0.3,
-    seasonHighRecYards:50, seasonHighReceptions:5,
-    careerTargets:5, careerTotalTDs:3, seasonHighRecTDs:1, seasonHighRushTDs:1,
+    careerPassYards:400, careerPassTDs:4, careerINTs:4, careerPasserRating:1.0,
+    careerCompPct:0.008, careerSacks:4, careerGamesStarted:4, careerQBRushYards:80,
+    seasonHighPassYards:80, seasonHighPassTDs:1,
+    careerRushYards:250, careerRushTDs:3, careerYPC:0.06, careerRushAttempts:40,
+    seasonHighRushYards:40, careerFumbles:2,
+    careerRecYards:250, careerReceptions:15, careerRecTDs:3, careerYPR:0.2,
+    seasonHighRecYards:40, seasonHighReceptions:4,
+    careerTargets:4, careerTotalTDs:2, seasonHighRecTDs:1, seasonHighRushTDs:1,
     seasons:1
 };
 
@@ -940,7 +950,7 @@ function makeLink(p) {
     var parts = p.name.replace(/[^a-zA-Z ]/g,'').trim().split(' ');
     var last = parts[parts.length - 1], first = parts[0];
     var url = base + last[0] + '/' + last.slice(0,4) + first.slice(0,2) + '00.htm';
-    return '<a href="' + url + '" target="_blank" class="text-inherit no-underline cursor-pointer hover:opacity-75 transition-opacity">' + p.name + '</a>';
+    return '<a href="' + url + '" target="_blank" class="text-inherit no-underline cursor-pointer relative z-20 hover:opacity-75 transition-opacity" style="font:inherit;color:inherit;">' + p.name + '</a>';
 }
 
 // Category descriptions for info popup
@@ -1248,6 +1258,10 @@ function generatePickEm() {
     });
     if (validCats.length === 0) validCats = Object.keys(BASE_CATS).filter(function(k) { return BASE_CATS[k].thresholds; });
 
+    // Prefer unused categories before repeating
+    var unusedCats = validCats.filter(function(k) { return !categoryHistory[k]; });
+    if (unusedCats.length > 0) validCats = unusedCats;
+
     for (var retry = 0; retry < 20; retry++) {
         var ck = validCats[Math.floor(Math.random() * validCats.length)];
         var cc = BASE_CATS[ck];
@@ -1288,6 +1302,7 @@ function generatePickEm() {
         shuffle(correctPool); shuffle(distractorPool);
         var chosen = correctPool.slice(0, numCorrect).concat(distractorPool.slice(0, numIncorrect));
         shuffle(chosen);
+        categoryHistory[ck] = (categoryHistory[ck] || 0) + 1;
         return {cards:chosen, cat:ck, threshold:threshVal, correctIDs: new Set(correctPool.slice(0,numCorrect).map(function(x){return x.p.id;}))};
     }
     return null;
@@ -1710,46 +1725,64 @@ function lockInShowdown() {
         startRound();
         return;
     }
-    var match = A; // A and B already set
+    dom.sbsSubmitBtn.disabled = true;
+    dom.rerollBtn.disabled = true;
+    dom.sbsSubmitBtn.textContent = 'Revealing...';
+
     var realPos = A.pos;
     var cats = realPos === 'QB' ? SBS_CATS_QB : (realPos === 'RB' ? SBS_CATS_RB : SBS_CATS_WR);
     var correct = 0;
     var rows = dom.sbsGrid.children;
+    var stepDelay = useAnimations ? 300 : 0;
+
     cats.forEach(function(cat, i) {
-        var vA = getStat(A, cat.key), vB = getStat(B, cat.key);
-        var correctPick2 = (cat.lowerBetter ? vA < vB : vA > vB) ? 'A' : 'B';
-        if (vA === vB) { sbsPicks[i] = correctPick2; } // tie: any is correct
-        var cells = rows[i].querySelectorAll('.sbs-cell');
-        var cellA = cells[0], cellB = cells[1];
-        // Show values
-        cellA.textContent = formatStat(vA, cat.key);
-        cellB.textContent = formatStat(vB, cat.key);
-        if (sbsPicks[i] === correctPick2) {
-            correct++;
-            (sbsPicks[i] === 'A' ? cellA : cellB).classList.remove('selected');
-            (sbsPicks[i] === 'A' ? cellA : cellB).classList.add('correct');
-            (sbsPicks[i] === 'A' ? cellB : cellA).classList.add('sbs-cell');
-        } else {
-            (sbsPicks[i] === 'A' ? cellA : cellB).classList.remove('selected');
-            (sbsPicks[i] === 'A' ? cellA : cellB).classList.add('incorrect');
-            (correctPick2 === 'A' ? cellA : cellB).classList.add('correct');
-        }
+        setTimeout(function() {
+            var vA = getStat(A, cat.key), vB = getStat(B, cat.key);
+            var correctPick2 = (cat.lowerBetter ? vA < vB : vA > vB) ? 'A' : 'B';
+            if (vA === vB) { sbsPicks[i] = correctPick2; }
+            var cells = rows[i].querySelectorAll('.sbs-cell');
+            var cellA = cells[0], cellB = cells[1];
+            cellA.textContent = formatStat(vA, cat.key);
+            cellB.textContent = formatStat(vB, cat.key);
+
+            var userPick = sbsPicks[i];
+            var winA = correctPick2 === 'A';
+            var winB = correctPick2 === 'B';
+
+            if (userPick === correctPick2) {
+                correct++;
+                (userPick === 'A' ? cellA : cellB).classList.remove('selected');
+                (userPick === 'A' ? cellA : cellB).classList.add('correct');
+                if (winA) cellA.classList.add('scale-105','transition-transform');
+                if (winB) cellB.classList.add('scale-105','transition-transform');
+            } else {
+                (userPick === 'A' ? cellA : cellB).classList.remove('selected');
+                (userPick === 'A' ? cellA : cellB).classList.add('incorrect');
+                (correctPick2 === 'A' ? cellA : cellB).classList.add('correct');
+                if (winA) cellA.classList.add('scale-105','transition-transform');
+                if (winB) cellB.classList.add('scale-105','transition-transform');
+            }
+            setTimeout(function() { cellA.classList.remove('scale-105'); cellB.classList.remove('scale-105'); }, 200);
+        }, i * stepDelay);
     });
-    var sbsScoreTable = [0, 0, 0, 0, 0, 0, 100, 250, 450, 700, 1000];
-    var pts = sbsScoreTable[Math.min(correct, 10)];
-    roundResults.push({round:round, pts:pts, cat:'Showdown', pA:A.name, pB:B.name, correct:correct + '/' + cats.length});
-    var prevScoreSbs = score;
-    score += pts;
-    var medalsSbs = [2000, 3000, 4000, 5000];
-    var crossedMedalSbs = medalsSbs.some(function(m) { return prevScoreSbs < m && score >= m; });
-    animateValue(dom.scoreDisp, prevScoreSbs, score, 1000, crossedMedalSbs);
-    dom.sbsFeedback.innerHTML = '<div class="text-green-600 dark:text-green-400 font-black text-lg animate-enter">' + correct + '/' + cats.length + ' Correct (+' + pts + ')</div>';
-    dom.sbsSubmitBtn.textContent = round >= 10 ? 'Finish Game' : 'Next Round';
-    dom.sbsSubmitBtn.disabled = false;
-    dom.rerollBtn.disabled = true;
-    // Make names clickable
-    dom.sbsNameA.innerHTML = makeLink(A);
-    dom.sbsNameB.innerHTML = makeLink(B);
+
+    var finalDelay = (cats.length * stepDelay) + (useAnimations ? 200 : 0);
+    setTimeout(function() {
+        var sbsScoreTable = [0, 0, 0, 0, 0, 0, 100, 250, 450, 700, 1000];
+        var pts = sbsScoreTable[Math.min(correct, 10)];
+        roundResults.push({round:round, pts:pts, cat:'Showdown', pA:A.name, pB:B.name, correct:correct + '/' + cats.length});
+        var prevScoreSbs = score;
+        score += pts;
+        var medalsSbs = [2000, 3000, 4000, 5000];
+        var crossedMedalSbs = medalsSbs.some(function(m) { return prevScoreSbs < m && score >= m; });
+        animateValue(dom.scoreDisp, prevScoreSbs, score, 1000, crossedMedalSbs);
+        dom.sbsFeedback.innerHTML = '<div class="text-green-600 dark:text-green-400 font-black text-lg animate-enter">' + correct + '/' + cats.length + ' Correct (+' + pts + ')</div>';
+        dom.sbsSubmitBtn.textContent = round >= 10 ? 'Finish Game' : 'Next Round';
+        dom.sbsSubmitBtn.disabled = false;
+        // Make names clickable
+        dom.sbsNameA.innerHTML = makeLink(A);
+        dom.sbsNameB.innerHTML = makeLink(B);
+    }, finalDelay);
 }
 
 function onPickEmCardClick(card, player, val) {
@@ -1757,12 +1790,18 @@ function onPickEmCardClick(card, player, val) {
     if (card.classList.contains('revealed')) return;
     var isCorrect = pickEmState.correctIDs.has(player.id);
     if (isCorrect) {
-        card.classList.add('revealed', 'correct');
+        card.classList.add('revealed', 'correct', 'border-2');
         card.querySelector('.stat-val').textContent = formatStat(val, catKey);
         card.querySelector('.stat-val').classList.remove('hidden');
         card.querySelector('.base-pts-tag').classList.remove('hidden');
         if (useAnimations) card.querySelector('.base-pts-tag').classList.add('animate-text-pop');
         pickEmState.picksMade++;
+        // Dim skip die after first pick
+        if (pickEmState.picksMade === 1 && !hasUsedReroll) {
+            dom.rerollBtn.classList.remove('hover:bg-emerald-200');
+            dom.rerollBtn.classList.add('opacity-50','cursor-not-allowed');
+            dom.rerollBtn.disabled = true;
+        }
         var pts = 100;
         // Chain logic: require picks ordered from farthest to closest to threshold
         if (pickEmState.chainActive && pickEmState.lastVal !== null) {
@@ -1805,7 +1844,7 @@ function onPickEmCardClick(card, player, val) {
             return;
         }
     } else {
-        card.classList.add('revealed', 'incorrect');
+        card.classList.add('revealed', 'incorrect', 'border-2');
         card.querySelector('.stat-val').textContent = formatStat(val, catKey);
         card.querySelector('.stat-val').classList.remove('hidden');
         if (dom.pickemChainBar) { dom.pickemChainBar.classList.add('hidden'); dom.pickemChainBar.innerHTML = ''; }
@@ -1815,33 +1854,75 @@ function onPickEmCardClick(card, player, val) {
 
 function endPickEmRound(wasCorrect) {
     pickEmState.roundOver = true;
-    // Reveal all remaining
-    dom.pickemGrid.querySelectorAll('.pickem-card:not(.revealed)').forEach(function(c) {
-        var cid = c.dataset.id;
-        var cval = parseFloat(c.dataset.val);
-        c.classList.add('revealed');
-        c.querySelector('.stat-val').textContent = formatStat(cval, catKey);
-        c.querySelector('.stat-val').classList.remove('hidden');
-        if (pickEmState.correctIDs.has(cid)) c.classList.add('missed');
-        else c.classList.add('incorrect');
-    });
-    roundResults.push({round:round, pts:pickEmState.totalRoundPts, cat:BASE_CATS[catKey].label, correct:wasCorrect});
-    var prevScorePE = score;
-    score += pickEmState.totalRoundPts;
-    var medalsPE = [2000, 3000, 4000, 5000];
-    var crossedMedalPE = medalsPE.some(function(m) { return prevScorePE < m && score >= m; });
-    animateValue(dom.scoreDisp, prevScorePE, score, 1000, crossedMedalPE);
-    if (dom.pickemFeedback) {
-        if (wasCorrect) {
-            dom.pickemFeedback.innerHTML = '<div class="text-green-600 dark:text-green-400 font-black text-lg animate-enter">' + pickEmState.picksMade + '/5 Correct (+' + pickEmState.totalRoundPts + ')</div>';
-        } else {
-            dom.pickemFeedback.innerHTML = '<div class="text-red-500 font-bold text-sm animate-enter">Wrong! Round over</div>';
+    dom.pickemGrid.classList.add('pointer-events-none');
+    var allCards = Array.from(dom.pickemGrid.querySelectorAll('.pickem-card'));
+    var hiddenCards = allCards.filter(function(c) { return !c.classList.contains('revealed'); });
+    dom.pickemSubmitBtn.disabled = true;
+
+    var styleGreenUnpicked = ['bg-green-100','dark:bg-green-900/40','border-transparent','text-gray-600','dark:text-gray-400'];
+    var styleRedUnpicked = ['bg-red-100','dark:bg-red-900/40','border-transparent','text-gray-600','dark:text-gray-400'];
+
+    var finalize = function() {
+        dom.pickemGrid.classList.remove('pointer-events-none');
+        // Make all player names into links
+        allCards.forEach(function(c) {
+            var pid = c.dataset.id;
+            var nameEl = c.querySelector('.pickem-name');
+            // Find matching player object
+            var player = NFL_PLAYERS.find(function(p) { return p.id === pid; });
+            if (player && nameEl && !nameEl.querySelector('a')) {
+                nameEl.innerHTML = makeLink(player);
+                var link = nameEl.querySelector('a');
+                if (link) { link.style.pointerEvents = 'auto'; link.style.cursor = 'pointer'; }
+            }
+            c.style.cursor = 'default';
+        });
+        roundResults.push({round:round, pts:pickEmState.totalRoundPts, cat:BASE_CATS[catKey].label, correct:wasCorrect});
+        var prevScorePE = score;
+        score += pickEmState.totalRoundPts;
+        var medalsPE = [2000, 3000, 4000, 5000];
+        var crossedMedalPE = medalsPE.some(function(m) { return prevScorePE < m && score >= m; });
+        animateValue(dom.scoreDisp, prevScorePE, score, 1000, crossedMedalPE);
+        if (dom.pickemFeedback) {
+            dom.pickemFeedback.innerHTML = '<div class="font-black text-lg animate-enter ' + (wasCorrect ? 'text-green-600 dark:text-green-400' : 'text-red-500') + '">Round Over! (+' + pickEmState.totalRoundPts + ')</div>';
         }
+        if (dom.pickemChainBar) { dom.pickemChainBar.classList.add('hidden'); dom.pickemChainBar.innerHTML = ''; }
+        dom.pickemSubmitBtn.textContent = round >= 10 ? 'Finish Game' : 'Next Round';
+        dom.pickemSubmitBtn.disabled = false;
+        dom.rerollBtn.disabled = true;
+    };
+
+    if (!useAnimations) {
+        hiddenCards.forEach(function(c) {
+            var cid = c.dataset.id;
+            var isC = pickEmState.correctIDs.has(cid);
+            var cval = parseFloat(c.dataset.val);
+            c.classList.add('revealed','border-2');
+            c.querySelector('.stat-val').textContent = formatStat(cval, catKey);
+            c.querySelector('.stat-val').classList.remove('hidden');
+            if (isC) styleGreenUnpicked.forEach(function(cl) { c.classList.add(cl); });
+            else styleRedUnpicked.forEach(function(cl) { c.classList.add(cl); });
+        });
+        finalize();
+        return;
     }
-    if (dom.pickemChainBar) { dom.pickemChainBar.classList.add('hidden'); dom.pickemChainBar.innerHTML = ''; }
-    dom.pickemSubmitBtn.textContent = round >= 10 ? 'Finish Game' : 'Next Round';
-    dom.pickemSubmitBtn.disabled = false;
-    dom.rerollBtn.disabled = true;
+
+    setTimeout(function() {
+        hiddenCards.forEach(function(c, i) {
+            setTimeout(function() {
+                var cid = c.dataset.id;
+                var isC = pickEmState.correctIDs.has(cid);
+                var cval = parseFloat(c.dataset.val);
+                c.classList.add('revealed','border-2');
+                c.querySelector('.stat-val').textContent = formatStat(cval, catKey);
+                c.querySelector('.stat-val').classList.remove('hidden');
+                if (isC) styleGreenUnpicked.forEach(function(cl) { c.classList.add(cl); });
+                else styleRedUnpicked.forEach(function(cl) { c.classList.add(cl); });
+                c.classList.add('animate-enter');
+            }, i * 300);
+        });
+        setTimeout(finalize, hiddenCards.length * 300);
+    }, 500);
 }
 
 function lockInPickEm() {
