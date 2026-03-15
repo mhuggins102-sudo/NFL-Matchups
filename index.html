@@ -764,37 +764,37 @@ function loadAllData(onDone) {
 // ═══════════════════════════════════════
 var BASE_CATS = {
     // QB
-    careerPassYards:    {label:'Career Pass Yards',    type:'QB',  dMin:5000, step:100, thresholds:[14000,18000,22000,27000,32000,38000,45000,55000], tolerance:0.20, minBuffer:4000},
-    careerPassTDs:      {label:'Career Pass TDs',      type:'QB',  dMin:40,   step:1,   thresholds:[75,100,150,200,250,300,375,400], tolerance:0.22, minBuffer:25},
-    careerINTs:         {label:'Career INTs',          type:'QB',  dMin:25,   step:1,   lowerBetter:true, thresholds:[175,140,110,90,75,60,45], tolerance:0.22, minBuffer:15},
-    careerPasserRating: {label:'Career Passer Rating', type:'QB',  dMin:5.0,  step:0.1, thresholds:[75,77,80,83,86,90,94], tolerance:0.10, minBuffer:4.0},
-    careerCompPct:      {label:'Career Comp %',        type:'QB',  dMin:0.025,step:0.005,thresholds:[0.57,0.58,0.59,0.60,0.62,0.64,0.66], tolerance:0.10, minBuffer:0.02},
-    careerSacks:        {label:'Career Sacks Taken',   type:'QB',  dMin:50,   step:5,   lowerBetter:true, thresholds:[350,275,225,175,140,100,60], tolerance:0.22, minBuffer:30},
-    careerGamesStarted: {label:'Career Starts',        type:'QB',  dMin:25,   step:1,   thresholds:[75,90,110,130,155,185,210], tolerance:0.20, minBuffer:15},
-    careerQBRushYards:  {label:'Career Rush Yards',    type:'QB',  dMin:500,  step:25,  thresholds:[400,700,1000,1500,2000,2750,3500], tolerance:0.25, minBuffer:300},
-    seasonHighPassYards:{label:'High Season Pass Yds', type:'QB',  dMin:400,  step:25,  thresholds:[3200,3400,3800,4200,4600,5000], tolerance:0.15, minBuffer:300},
-    seasonHighPassTDs:  {label:'High Season Pass TDs', type:'QB',  dMin:5,    step:1,   thresholds:[20,22,26,30,35,40], tolerance:0.18, minBuffer:4},
+    careerPassYards:    {label:'Career Pass Yards',    type:'QB',  dMin:3000, step:100, thresholds:[14000,18000,22000,27000,32000,38000,45000,55000], tolerance:0.20, minBuffer:4000},
+    careerPassTDs:      {label:'Career Pass TDs',      type:'QB',  dMin:24,   step:1,   thresholds:[75,100,150,200,250,300,375,400], tolerance:0.22, minBuffer:25},
+    careerINTs:         {label:'Career INTs',          type:'QB',  dMin:15,   step:1,   lowerBetter:true, thresholds:[175,140,110,90,75,60,45], tolerance:0.22, minBuffer:15},
+    careerPasserRating: {label:'Career Passer Rating', type:'QB',  dMin:3.0,  step:0.1, thresholds:[75,77,80,83,86,90,94], tolerance:0.10, minBuffer:4.0},
+    careerCompPct:      {label:'Career Comp %',        type:'QB',  dMin:0.015,step:0.005,thresholds:[0.57,0.58,0.59,0.60,0.62,0.64,0.66], tolerance:0.10, minBuffer:0.02},
+    careerSacks:        {label:'Career Sacks Taken',   type:'QB',  dMin:30,   step:5,   lowerBetter:true, thresholds:[350,275,225,175,140,100,60], tolerance:0.22, minBuffer:30},
+    careerGamesStarted: {label:'Career Starts',        type:'QB',  dMin:15,   step:1,   thresholds:[75,90,110,130,155,185,210], tolerance:0.20, minBuffer:15},
+    careerQBRushYards:  {label:'Career Rush Yards',    type:'QB',  dMin:300,  step:25,  thresholds:[400,700,1000,1500,2000,2750,3500], tolerance:0.25, minBuffer:300},
+    seasonHighPassYards:{label:'High Season Pass Yds', type:'QB',  dMin:240,  step:25,  thresholds:[3200,3400,3800,4200,4600,5000], tolerance:0.15, minBuffer:300},
+    seasonHighPassTDs:  {label:'High Season Pass TDs', type:'QB',  dMin:3,    step:1,   thresholds:[20,22,26,30,35,40], tolerance:0.18, minBuffer:4},
     // RB
-    careerRushYards:    {label:'Career Rush Yards',    type:'RB',  dMin:1500, step:50,  thresholds:[3500,4500,5500,7000,8500,10000,12000], tolerance:0.20, minBuffer:1000},
-    careerRushTDs:      {label:'Career Rush TDs',      type:'RB',  dMin:12,   step:1,   thresholds:[25,30,40,50,60,75,90], tolerance:0.22, minBuffer:8},
-    careerYPC:          {label:'Career Yards/Carry',   type:'RB',  dMin:0.20, step:0.05,thresholds:[3.9,4.0,4.1,4.2,4.3,4.4,4.6], tolerance:0.10, minBuffer:0.15},
-    careerRushAttempts: {label:'Career Rush Attempts', type:'RB',  dMin:350,  step:10,  thresholds:[850,1000,1300,1700,2100,2500,3000], tolerance:0.20, minBuffer:200},
-    seasonHighRushYards:{label:'High Season Rush Yds', type:'RB',  dMin:175,  step:10,  thresholds:[950,1050,1150,1250,1350,1500,1700], tolerance:0.18, minBuffer:100},
-    careerFumbles:      {label:'Career Fumbles',       type:'RB',  dMin:5,    step:1,   lowerBetter:true, thresholds:[35,28,22,17,13,9], tolerance:0.25, minBuffer:4},
+    careerRushYards:    {label:'Career Rush Yards',    type:'RB',  dMin:900,  step:50,  thresholds:[3500,4500,5500,7000,8500,10000,12000], tolerance:0.20, minBuffer:1000},
+    careerRushTDs:      {label:'Career Rush TDs',      type:'RB',  dMin:7,    step:1,   thresholds:[25,30,40,50,60,75,90], tolerance:0.22, minBuffer:8},
+    careerYPC:          {label:'Career Yards/Carry',   type:'RB',  dMin:0.12, step:0.05,thresholds:[3.9,4.0,4.1,4.2,4.3,4.4,4.6], tolerance:0.10, minBuffer:0.15},
+    careerRushAttempts: {label:'Career Rush Attempts', type:'RB',  dMin:210,  step:10,  thresholds:[850,1000,1300,1700,2100,2500,3000], tolerance:0.20, minBuffer:200},
+    seasonHighRushYards:{label:'High Season Rush Yds', type:'RB',  dMin:105,  step:10,  thresholds:[950,1050,1150,1250,1350,1500,1700], tolerance:0.18, minBuffer:100},
+    careerFumbles:      {label:'Career Fumbles',       type:'RB',  dMin:3,    step:1,   lowerBetter:true, thresholds:[35,28,22,17,13,9], tolerance:0.25, minBuffer:4},
     // Skill (WR/TE)
-    careerRecYards:     {label:'Career Rec Yards',     type:'skill',dMin:1500, step:50,  thresholds:[2500,3500,5000,6500,8000,10000,12000], tolerance:0.20, minBuffer:1000},
-    careerReceptions:   {label:'Career Receptions',    type:'skill',dMin:100,  step:5,   thresholds:[250,325,400,500,600,750,900], tolerance:0.20, minBuffer:75},
-    careerRecTDs:       {label:'Career Rec TDs',       type:'skill',dMin:12,   step:1,   thresholds:[15,20,28,35,45,55,70], tolerance:0.22, minBuffer:8},
-    careerYPR:          {label:'Career Yards/Rec',     type:'skill',dMin:1.0,  step:0.1, thresholds:[10.5,11.0,11.5,12.0,12.5,13.0,13.5,14.0,15.0], tolerance:0.10, minBuffer:0.75},
-    seasonHighRecYards: {label:'High Season Rec Yds',  type:'skill',dMin:175,  step:10,  thresholds:[700,850,950,1050,1150,1300,1500], tolerance:0.18, minBuffer:100},
-    seasonHighReceptions:{label:'High Season Recs',   type:'skill',dMin:10,   step:1,   thresholds:[55,65,75,85,95,105], tolerance:0.18, minBuffer:8},
+    careerRecYards:     {label:'Career Rec Yards',     type:'skill',dMin:900,  step:50,  thresholds:[2500,3500,5000,6500,8000,10000,12000], tolerance:0.20, minBuffer:1000},
+    careerReceptions:   {label:'Career Receptions',    type:'skill',dMin:60,   step:5,   thresholds:[250,325,400,500,600,750,900], tolerance:0.20, minBuffer:75},
+    careerRecTDs:       {label:'Career Rec TDs',       type:'skill',dMin:7,    step:1,   thresholds:[15,20,28,35,45,55,70], tolerance:0.22, minBuffer:8},
+    careerYPR:          {label:'Career Yards/Rec',     type:'skill',dMin:0.6,  step:0.1, thresholds:[10.5,11.0,11.5,12.0,12.5,13.0,13.5,14.0,15.0], tolerance:0.10, minBuffer:0.75},
+    seasonHighRecYards: {label:'High Season Rec Yds',  type:'skill',dMin:105,  step:10,  thresholds:[700,850,950,1050,1150,1300,1500], tolerance:0.18, minBuffer:100},
+    seasonHighReceptions:{label:'High Season Recs',   type:'skill',dMin:6,    step:1,   thresholds:[55,65,75,85,95,105], tolerance:0.18, minBuffer:8},
     // New stats
-    careerTargets:      {label:'Career Targets',       type:'skill',dMin:150,  step:5,   thresholds:[300,400,500,600,750,900,1050], tolerance:0.20, minBuffer:75},
-    careerTotalTDs:     {label:'Career Total TDs',     type:'RB',   dMin:12,   step:1,   thresholds:[30,40,50,60,75,90,100], tolerance:0.22, minBuffer:8},
-    seasonHighRecTDs:   {label:'High Season Rec TDs',  type:'skill',dMin:2,    step:1,   thresholds:[5,6,7,8,10,12], tolerance:0.22, minBuffer:2},
-    seasonHighRushTDs:  {label:'High Season Rush TDs', type:'RB',   dMin:3,    step:1,   thresholds:[7,9,10,12,14,16], tolerance:0.22, minBuffer:2},
+    careerTargets:      {label:'Career Targets',       type:'skill',dMin:90,   step:5,   thresholds:[300,400,500,600,750,900,1050], tolerance:0.20, minBuffer:75},
+    careerTotalTDs:     {label:'Career Total TDs',     type:'RB',   dMin:7,    step:1,   thresholds:[30,40,50,60,75,90,100], tolerance:0.22, minBuffer:8},
+    seasonHighRecTDs:   {label:'High Season Rec TDs',  type:'skill',dMin:1,    step:1,   thresholds:[5,6,7,8,10,12], tolerance:0.22, minBuffer:2},
+    seasonHighRushTDs:  {label:'High Season Rush TDs', type:'RB',   dMin:2,    step:1,   thresholds:[7,9,10,12,14,16], tolerance:0.22, minBuffer:2},
     // Universal
-    seasons:            {label:'Seasons Played',       type:'both', dMin:2,    step:1,   thresholds:[7,8,9,10,12,14,15], tolerance:0.25, minBuffer:1},
+    seasons:            {label:'Seasons Played',       type:'both', dMin:1,    step:1,   thresholds:[7,8,9,10,12,14,15], tolerance:0.25, minBuffer:1},
 };
 
 var BASE_BULL = {
@@ -1180,7 +1180,7 @@ function generateHowMuch() {
             var b = pool[Math.floor(Math.random() * pool.length)];
             if (a === b) continue;
             var d = Math.abs(getStat(a, ck) - getStat(b, ck));
-            if (d >= catDef.dMin && d <= catDef.dMin * 3) {
+            if (d >= catDef.dMin && d <= catDef.dMin * 5) {
                 usedPlayerIDs.add(a.id); usedPlayerIDs.add(b.id);
                 categoryHistory[ck] = (categoryHistory[ck] || 0) + 1;
                 return {pA:a, pB:b, cat:ck};
@@ -1314,7 +1314,7 @@ function calcHowMuchScore(diff, min, max) {
     var pts = 200; // always get 200 for correct player
     if (diff >= min && diff <= max) {
         var curCat = BASE_CATS[catKey];
-        var rangeMax = curCat.dMin * 3;
+        var rangeMax = curCat.dMin * 5;
         var scoringSpan = rangeMax - curCat.dMin;
         var rangeWidth = max - min;
         var safeSpan = scoringSpan > 0 ? scoringSpan : 1;
@@ -1358,7 +1358,7 @@ function startRound() {
         userPickHowMuch = null;
         var sA = getStat(A, catKey), sB = getStat(B, catKey);
         trueDiff = Math.abs(sA - sB);
-        var dMin = cat.dMin, dMax = cat.dMin * 3;
+        var dMin = cat.dMin, dMax = cat.dMin * 5;
         initSlider(dMax, dMin, cat.step);
         dom.pin.classList.add('hidden');
         dom.pin.className = 'absolute top-[6px] w-1.5 h-7 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.8)] hidden z-30 pointer-events-none transform -translate-x-1/2 transition-all duration-500 border border-white dark:border-gray-900';
@@ -1584,7 +1584,8 @@ function lockInHowMuch() {
         dom.pin.style.transition = 'none';
         dom.pin.style.left = '0%';
         dom.pin.classList.remove('hidden'); dom.pin.style.display = '';
-        dom.resultText.textContent = ''; dom.resultText.style.opacity = '0';
+        dom.resultText.textContent = '';
+        dom.resultText.className = 'absolute bottom-full left-1/2 transform -translate-x-1/2 mb-0 text-sm font-black whitespace-nowrap hidden';
         dom.pin.className = 'absolute top-[6px] w-1.5 h-7 rounded-full shadow-lg z-30 transform -translate-x-1/2 border border-white dark:border-gray-900 bg-gray-400';
         void dom.pin.offsetWidth; // force reflow
         dom.pin.style.transition = 'left ' + duration + 's ease-out';
@@ -2335,7 +2336,7 @@ function toggleDeadZone() {
     // Recalculate slider if game is active in How Much mode
     if (dom.gameScreen && !dom.gameScreen.classList.contains('hidden') && A && B && gameMode === 'howMuch') {
         var curCat = BASE_CATS[catKey];
-        var dMin = curCat.dMin, dMax = dMin * 3, step = curCat.step;
+        var dMin = curCat.dMin, dMax = dMin * 5, step = curCat.step;
         var savedMin = sliderState.min, savedMax = sliderState.max;
         initSlider(dMax, dMin, step);
         sliderState.min = Math.max(savedMin, dMin);
