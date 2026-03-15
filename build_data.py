@@ -145,15 +145,18 @@ def main():
             if key not in season_agg:
                 season_agg[key] = {
                     "passing_yards": 0, "passing_tds": 0,
-                    "rushing_yards": 0, "receptions": 0,
-                    "receiving_yards": 0,
+                    "rushing_yards": 0, "rushing_tds": 0,
+                    "receptions": 0,
+                    "receiving_yards": 0, "receiving_tds": 0,
                 }
             sa = season_agg[key]
             sa["passing_yards"] += safe_int(row.get("passing_yards"))
             sa["passing_tds"] += safe_int(row.get("passing_tds"))
             sa["rushing_yards"] += safe_int(row.get("rushing_yards"))
+            sa["rushing_tds"] += safe_int(row.get("rushing_tds"))
             sa["receptions"] += safe_int(row.get("receptions"))
             sa["receiving_yards"] += safe_int(row.get("receiving_yards"))
+            sa["receiving_tds"] += safe_int(row.get("receiving_tds"))
 
         # Update season highs
         for (pid, season), sa in season_agg.items():
@@ -268,7 +271,10 @@ def main():
             "careerYPR": ypr,
             "seasonHighRecYards": sh.get("receiving_yards", 0),
             "seasonHighReceptions": sh.get("receptions", 0),
-            "careerRecYardsRB": p["receiving_yards"] if pos == "RB" else 0,
+            "careerTargets": p["targets"],
+            "careerTotalTDs": p["rushing_tds"] + p["receiving_tds"],
+            "seasonHighRecTDs": sh.get("receiving_tds", 0),
+            "seasonHighRushTDs": sh.get("rushing_tds", 0),
             "seasons": num_seasons,
         })
 
@@ -290,7 +296,9 @@ def main():
         "careerFumbles", "seasonHighRushYards",
         "careerRecYards", "careerReceptions", "careerRecTDs", "careerYPR",
         "seasonHighRecYards", "seasonHighReceptions",
-        "careerRecYardsRB", "seasons",
+        "careerTargets", "careerTotalTDs",
+        "seasonHighRecTDs", "seasonHighRushTDs",
+        "seasons",
     ]
     stats_path = os.path.join(OUT_DIR, "Stats.csv")
     with open(stats_path, "w", newline="") as f:
