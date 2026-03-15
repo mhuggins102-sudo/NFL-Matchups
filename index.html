@@ -32,8 +32,6 @@
             --color-platinum: #80e0e0;
         }
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-        @keyframes fade-in { from { opacity: 0; transform: translate(-50%, -10px); } to { opacity: 1; transform: translate(-50%, 0); } }
-        .animate-toast { animation: fade-in 0.3s ease-out forwards; }
         @keyframes fade-in-up { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
         .animate-enter { animation: fade-in-up 0.3s ease-out forwards; }
         @keyframes score-pop { 0%{transform:scale(1);}50%{transform:scale(1.5);}100%{transform:scale(1);} }
@@ -42,8 +40,7 @@
         .animate-score-pop-single { animation: score-pop-single 0.4s ease-out; }
         @keyframes text-pop { 0%{opacity:0;transform:scale(0.5);}50%{opacity:1;transform:scale(1.3);}100%{opacity:1;transform:scale(1);} }
         .animate-text-pop { animation: text-pop 0.4s cubic-bezier(0.175,0.885,0.32,1.275) forwards; }
-        @keyframes pulse-bull { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-        .animate-bullseye { animation: pulse-bull 0.6s infinite ease-in-out; }
+        #slider-fill-bar, #slider-bullseye-zone { border-radius: 999px; }
         @keyframes score-pop-multi { 0% { transform: scale(1); } 25% { transform: scale(1.4); } 50% { transform: scale(1); } 75% { transform: scale(1.4); } 100% { transform: scale(1); } }
         .animate-score-levelup { animation: score-pop-multi 1.2s ease-in-out; }
         @keyframes float-up { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, -4px); } }
@@ -125,8 +122,8 @@
         </button>
     </div>
     <div class="flex items-center gap-2 relative">
-        <button id="reroll-btn" class="p-2 rounded-full transition hidden disabled:opacity-60 text-emerald-600 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400">
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="M16 8h.01"/><path d="M8 8h.01"/><path d="M8 16h.01"/><path d="M16 16h.01"/><path d="M12 12h.01"/></svg>
+        <button id="reroll-btn" class="p-2 rounded-full transition hidden disabled:cursor-not-allowed disabled:opacity-60 text-emerald-600 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400" aria-label="Skip Question">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="M16 8h.01"/><path d="M8 8h.01"/><path d="M8 16h.01"/><path d="M16 16h.01"/><path d="M12 12h.01"/></svg>
         </button>
         <button id="settings-btn" class="p-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-800 transition text-gray-600 dark:text-gray-400">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
@@ -297,25 +294,27 @@
 
         <!-- SHOWDOWN UI -->
         <div id="ui-showdown" class="w-full hidden">
-            <div class="flex justify-between items-center mb-3 mt-2">
-                <div id="sbs-name-a" class="text-sm font-black text-center flex-1 px-1 text-gray-900 dark:text-white"></div>
-                <div class="text-xs font-black text-gray-400 px-2">VS</div>
-                <div id="sbs-name-b" class="text-sm font-black text-center flex-1 px-1 text-gray-900 dark:text-white"></div>
+            <div class="grid grid-cols-3 gap-1 mb-2 mt-4 text-center items-end">
+                <div></div>
+                <div id="sbs-name-a" class="text-sm font-black leading-tight text-gray-700 dark:text-gray-200"></div>
+                <div id="sbs-name-b" class="text-sm font-black leading-tight text-gray-700 dark:text-gray-200"></div>
             </div>
             <div id="sbs-grid-container" class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-300 dark:border-gray-800 p-3 mb-4 space-y-2"></div>
             <button id="sbs-submit-btn" class="primary-btn" disabled>Lock In</button>
+            <div class="mt-4 flex items-center justify-center gap-2 min-h-[2rem] flex-wrap">
+                <div id="sbs-feedback" class="flex flex-col items-center space-y-1"></div>
+            </div>
         </div>
 
         <!-- PICK 'EM UI -->
         <div id="ui-pickem" class="w-full hidden">
-            <div class="text-center mb-3 mt-2">
-                <div class="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-1">Pick players with</div>
-                <div id="pickem-thresh-val" class="text-xl font-black text-gray-900 dark:text-white"></div>
-                <div id="pickem-cat-label" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5"></div>
-            </div>
-            <div id="pickem-chain-bar" class="hidden text-sm font-bold text-amber-600 dark:text-amber-400 text-center"></div>
+            <div id="pickem-prompt-container" class="text-center text-sm font-bold text-gray-700 dark:text-gray-400 tracking-wide mb-3 mt-4"></div>
             <div id="pickem-grid" class="grid grid-cols-2 gap-2 mb-4"></div>
-            <button id="pickem-submit-btn" class="primary-btn" disabled>Reveal</button>
+            <button id="pickem-submit-btn" class="primary-btn" disabled>Next Round</button>
+            <div class="mt-4 flex items-center justify-center gap-2 min-h-[2rem] flex-wrap">
+                <div id="pickem-feedback" class="flex flex-col items-center space-y-1"></div>
+            </div>
+            <div id="pickem-chain-bar" class="hidden text-center text-sm font-bold text-amber-600 dark:text-amber-400"></div>
         </div>
     </div>
 
@@ -900,9 +899,13 @@ function makeLink(p) {
 function showAlert(msg, cls) {
     var el = dom.alert;
     el.textContent = msg;
-    el.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-2xl shadow-xl z-[80] font-bold text-sm opacity-100 pointer-events-none text-center max-w-[calc(100%-2.5rem)] text-white animate-toast ' + (cls || 'bg-green-600');
+    el.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 text-white px-4 py-2 rounded-2xl shadow-xl z-[80] font-bold text-sm transition-all duration-300 text-center max-w-[calc(100%-2.5rem)] opacity-0 pointer-events-none ' + (cls || 'bg-green-600');
+    void el.offsetWidth;
+    el.classList.remove('opacity-0', 'pointer-events-none');
     clearTimeout(el._t);
-    el._t = setTimeout(function() { el.style.opacity = '0'; }, 2000);
+    el._t = setTimeout(function() {
+        el.classList.add('opacity-0', 'pointer-events-none');
+    }, 3000);
 }
 
 function updateScoreColor() {
@@ -956,7 +959,6 @@ function updateSliderUI() {
     dom.bullseye.style.left  = getPct(bL) + '%';
     dom.bullseye.style.width = (getPct(bR) - getPct(bL)) + '%';
     dom.bullseye.classList.remove('hidden');
-    if (useAnimations) dom.bullseye.classList.add('animate-bullseye');
 }
 
 function renderSliderTicks() {
@@ -1235,7 +1237,6 @@ function startRound() {
         dom.pin.classList.add('hidden');
         dom.pin.className = 'absolute top-[6px] w-1.5 h-7 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.8)] hidden z-30 pointer-events-none transform -translate-x-1/2 transition-all duration-500 border border-white dark:border-gray-900';
         dom.resultText.style.opacity = '0';
-        dom.bullseye.classList.remove('animate-bullseye');
         dom.thumbMin.style.display = ''; dom.thumbMax.style.display = '';
         if (dom.feedback) dom.feedback.innerHTML = '';
         dom.submitBtn.textContent = 'Lock In'; dom.submitBtn.disabled = true;
@@ -1248,6 +1249,7 @@ function startRound() {
         var cats = match.pos === 'QB' ? SBS_CATS_QB : (match.pos === 'RB' ? SBS_CATS_RB : SBS_CATS_WR);
         dom.sbsNameA.textContent = A.name;
         dom.sbsNameB.textContent = B.name;
+        if (dom.sbsFeedback) dom.sbsFeedback.innerHTML = '';
         sbsPicks = new Array(cats.length).fill(null);
         renderShowdownGrid(cats);
         dom.sbsSubmitBtn.disabled = true;
@@ -1261,25 +1263,25 @@ function startRound() {
         pickEmState = {threshold:match.threshold, correctIDs:match.correctIDs, picksMade:0, totalRoundPts:0, lastVal:null, chainActive:true, chainCount:0, chainJustBroke:false, roundOver:false};
         var cc = BASE_CATS[catKey];
         var op = cc.lowerBetter ? '≤' : '≥';
-        dom.pickemThresh.textContent = op + ' ' + formatStat(match.threshold, catKey);
-        dom.pickemCatLabel.textContent = cc.label;
+        dom.pickemPrompt.innerHTML = 'Whose <span class="text-green-600 dark:text-green-400 font-black">' + cc.label + '</span> is <span class="text-gray-900 dark:text-white font-black">' + op + ' ' + formatStat(match.threshold, catKey) + '</span>?';
         var grid = dom.pickemGrid;
         grid.innerHTML = '';
         match.cards.forEach(function(item) {
             var card = document.createElement('div');
-            card.className = 'pickem-card';
+            card.className = 'pickem-card h-16 flex flex-col items-center justify-center';
             card.dataset.id = item.p.id;
             card.dataset.val = item.val;
-            card.innerHTML = '<div class="font-black text-xs leading-tight">' + item.p.name + '</div>'
-                + '<div class="stat-val hidden text-xs font-bold mt-0.5"></div>'
+            card.innerHTML = '<div class="pickem-name text-sm font-black leading-tight text-center pointer-events-none">' + item.p.name + '</div>'
+                + '<div class="stat-val hidden text-xs font-black mt-0.5 pointer-events-none"></div>'
                 + '<div class="base-pts-tag absolute bottom-1 left-1 hidden text-[9px] font-black text-green-600 dark:text-green-400 pointer-events-none">+100</div>'
                 + '<div class="bonus-tag absolute bottom-1 right-1 hidden text-[9px] font-black text-amber-500 pointer-events-none"></div>';
             card.addEventListener('click', function() { onPickEmCardClick(card, item.p, item.val); });
             grid.appendChild(card);
         });
         if (dom.pickemChainBar) dom.pickemChainBar.classList.add('hidden');
-        dom.pickemSubmitBtn.disabled = false;
-        dom.pickemSubmitBtn.textContent = 'Lock In';
+        if (dom.pickemFeedback) dom.pickemFeedback.innerHTML = '';
+        dom.pickemSubmitBtn.disabled = true;
+        dom.pickemSubmitBtn.textContent = round >= 10 ? 'Finish Game' : 'Next Round';
         dom.pickemSubmitBtn.onclick = lockInPickEm;
         showUI('pickEm');
     }
@@ -1291,6 +1293,15 @@ function showUI(mode) {
     dom.uiPickem.classList.add('hidden');
     dom.homeBtn.classList.remove('hidden');
     dom.rerollBtn.classList.remove('hidden');
+    if (hasUsedReroll) {
+        dom.rerollBtn.classList.remove('text-emerald-600','bg-emerald-100','hover:bg-emerald-200','dark:bg-emerald-900/30','dark:text-emerald-400');
+        dom.rerollBtn.classList.add('text-red-400','bg-red-100','dark:bg-red-900/20','dark:text-red-500','cursor-not-allowed','opacity-60');
+        dom.rerollBtn.disabled = true;
+    } else {
+        dom.rerollBtn.classList.remove('text-red-400','bg-red-100','dark:bg-red-900/20','dark:text-red-500','cursor-not-allowed','opacity-60');
+        dom.rerollBtn.classList.add('text-emerald-600','bg-emerald-100','hover:bg-emerald-200','dark:bg-emerald-900/30','dark:text-emerald-400');
+        dom.rerollBtn.disabled = false;
+    }
     dom.startScreen.classList.add('hidden');
     dom.gameScreen.classList.remove('hidden');
     dom.gameScreen.style.display = 'flex';
@@ -1472,7 +1483,7 @@ function lockInHowMuch() {
             if (isBullseye) {
                 setTimeout(function() {
                     var line3 = document.createElement('div');
-                    line3.className = 'text-amber-500 font-black text-lg animate-bullseye mt-1';
+                    line3.className = 'text-amber-500 font-black text-lg mt-1';
                     line3.textContent = 'BULLSEYE! +100';
                     dom.feedback.appendChild(line3);
                 }, 1000);
@@ -1523,6 +1534,8 @@ function finishRound(pts) {
 function renderShowdownGrid(cats) {
     var container = dom.sbsGrid;
     container.innerHTML = '';
+    var lastA = A.name.split(' ').pop();
+    var lastB = B.name.split(' ').pop();
     cats.forEach(function(cat, i) {
         var row = document.createElement('div');
         row.className = 'sbs-grid';
@@ -1531,11 +1544,11 @@ function renderShowdownGrid(cats) {
         labelEl.textContent = cat.label;
         var cellA = document.createElement('div');
         cellA.className = 'sbs-cell';
-        cellA.textContent = '?';
+        cellA.textContent = lastA;
         cellA.dataset.idx = i; cellA.dataset.which = 'A';
         var cellB = document.createElement('div');
         cellB.className = 'sbs-cell';
-        cellB.textContent = '?';
+        cellB.textContent = lastB;
         cellB.dataset.idx = i; cellB.dataset.which = 'B';
         cellA.addEventListener('click', function() { onSBSCellClick(i, 'A', cats); });
         cellB.addEventListener('click', function() { onSBSCellClick(i, 'B', cats); });
@@ -1594,7 +1607,7 @@ function lockInShowdown() {
     var medalsSbs = [2000, 3000, 4000, 5000];
     var crossedMedalSbs = medalsSbs.some(function(m) { return prevScoreSbs < m && score >= m; });
     animateValue(dom.scoreDisp, prevScoreSbs, score, 1000, crossedMedalSbs);
-    showAlert('+' + pts + ' pts (' + correct + '/' + cats.length + ')','bg-green-600');
+    dom.sbsFeedback.innerHTML = '<div class="text-green-600 dark:text-green-400 font-black text-lg animate-enter">' + correct + '/' + cats.length + ' Correct (+' + pts + ')</div>';
     dom.sbsSubmitBtn.textContent = round >= 10 ? 'Finish Game' : 'Next Round';
     dom.sbsSubmitBtn.disabled = false;
     dom.rerollBtn.disabled = true;
@@ -1651,7 +1664,6 @@ function onPickEmCardClick(card, player, val) {
                 dom.pickemChainBar.innerHTML = '';
             }
         }
-        showAlert('+' + pts + (pts > 100 ? ' (chain!)' : ''),'bg-green-600');
         if (pickEmState.picksMade >= 5) {
             endPickEmRound(true);
             return;
@@ -1683,25 +1695,46 @@ function endPickEmRound(wasCorrect) {
     var medalsPE = [2000, 3000, 4000, 5000];
     var crossedMedalPE = medalsPE.some(function(m) { return prevScorePE < m && score >= m; });
     animateValue(dom.scoreDisp, prevScorePE, score, 1000, crossedMedalPE);
-    if (!wasCorrect) showAlert('Wrong! Round over','bg-red-500');
-    else showAlert('+' + pickEmState.totalRoundPts + ' pts','bg-green-600');
+    if (dom.pickemFeedback) {
+        if (wasCorrect) {
+            dom.pickemFeedback.innerHTML = '<div class="text-green-600 dark:text-green-400 font-black text-lg animate-enter">' + pickEmState.picksMade + '/5 Correct (+' + pickEmState.totalRoundPts + ')</div>';
+        } else {
+            dom.pickemFeedback.innerHTML = '<div class="text-red-500 font-bold text-sm animate-enter">Wrong! Round over</div>';
+        }
+    }
+    if (dom.pickemChainBar) { dom.pickemChainBar.classList.add('hidden'); dom.pickemChainBar.innerHTML = ''; }
     dom.pickemSubmitBtn.textContent = round >= 10 ? 'Finish Game' : 'Next Round';
     dom.pickemSubmitBtn.disabled = false;
     dom.rerollBtn.disabled = true;
 }
 
 function lockInPickEm() {
-    if (dom.pickemSubmitBtn.textContent === 'Next Round' || dom.pickemSubmitBtn.textContent === 'Finish Game') {
-        round++;
-        startRound();
-        return;
-    }
-    endPickEmRound(true);
+    round++;
+    startRound();
 }
 
 // ═══════════════════════════════════════
 // GAME START / END
 // ═══════════════════════════════════════
+function skipQuestion() {
+    if (hasUsedReroll) return;
+    // Only allow skip before submission
+    if (gameMode === 'howMuch' && dom.submitBtn.textContent !== 'Lock In') return;
+    if (gameMode === 'sideBySide' && dom.sbsSubmitBtn.textContent !== 'Lock In') return;
+    if (gameMode === 'pickEm' && pickEmState.roundOver) return;
+    if (gameMode === 'pickEm' && pickEmState.picksMade > 0) return;
+
+    hasUsedReroll = true;
+
+    // Turn red
+    dom.rerollBtn.classList.remove('text-emerald-600','bg-emerald-100','hover:bg-emerald-200','dark:bg-emerald-900/30','dark:text-emerald-400');
+    dom.rerollBtn.classList.add('text-red-400','bg-red-100','dark:bg-red-900/20','dark:text-red-500','cursor-not-allowed','opacity-60');
+    dom.rerollBtn.disabled = true;
+
+    showAlert('Question skipped!', 'bg-blue-600');
+    startRound();
+}
+
 function startGame() {
     score = 0; round = 1; roundResults = [];
     usedPlayerIDs = new Set(); categoryHistory = {};
@@ -1866,9 +1899,10 @@ document.addEventListener('DOMContentLoaded', function() {
     dom.sbsWinsB    = document.getElementById('sbs-wins-b');
     dom.sbsGrid     = document.getElementById('sbs-grid-container');
     dom.sbsSubmitBtn= document.getElementById('sbs-submit-btn');
+    dom.sbsFeedback = document.getElementById('sbs-feedback');
     // Pick Em
-    dom.pickemThresh= document.getElementById('pickem-thresh-val');
-    dom.pickemCatLabel=document.getElementById('pickem-cat-label');
+    dom.pickemPrompt= document.getElementById('pickem-prompt-container');
+    dom.pickemFeedback = document.getElementById('pickem-feedback');
     dom.pickemGrid  = document.getElementById('pickem-grid');
     dom.pickemSubmitBtn=document.getElementById('pickem-submit-btn');
     // End
@@ -1980,12 +2014,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     dom.cardA.addEventListener('click', function() { onCardClick('A'); });
     dom.cardB.addEventListener('click', function() { onCardClick('B'); });
-    dom.rerollBtn.addEventListener('click', function() {
-        if (hasUsedReroll) { showAlert('No rerolls left','bg-red-500'); return; }
-        hasUsedReroll = true;
-        dom.rerollBtn.disabled = true;
-        startRound();
-    });
+    dom.rerollBtn.addEventListener('click', skipQuestion);
     dom.playAgainBtn.addEventListener('click', function() {
         dom.endScreen.classList.add('hidden'); dom.endScreen.style.display='none';
         dom.startScreen.classList.remove('hidden');
@@ -2091,12 +2120,11 @@ function toggleFormat() {
     // Re-render active game UI
     if (dom.gameScreen && !dom.gameScreen.classList.contains('hidden')) {
         if (!dom.uiPickem.classList.contains('hidden')) {
-            // Update Pick'Em threshold display
-            var threshEl = dom.pickemThresh;
-            if (threshEl && catKey) {
+            // Update Pick'Em prompt display
+            if (dom.pickemPrompt && catKey) {
                 var cc = BASE_CATS[catKey];
                 var op = cc.lowerBetter ? '≤' : '≥';
-                threshEl.textContent = op + ' ' + formatStat(pickEmState.threshold, catKey);
+                dom.pickemPrompt.innerHTML = 'Whose <span class="text-green-600 dark:text-green-400 font-black">' + cc.label + '</span> is <span class="text-gray-900 dark:text-white font-black">' + op + ' ' + formatStat(pickEmState.threshold, catKey) + '</span>?';
             }
             // Update revealed card values
             dom.pickemGrid.querySelectorAll('.revealed').forEach(function(card) {
