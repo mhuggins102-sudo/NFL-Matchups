@@ -648,7 +648,8 @@ var STAT_KEYS = [
     'seasonHighReceptions','careerFumbles','seasonHighRushYards',
     'careerPassYards','careerPassTDs','careerINTs','careerPasserRating','careerCompPct',
     'careerSacks','careerGamesStarted','seasonHighPassYards','seasonHighPassTDs',
-    'careerRecYardsRB','seasons'
+    'careerTargets','careerTotalTDs','seasonHighRecTDs','seasonHighRushTDs',
+    'seasons'
 ];
 
 function loadCSV(url, cb) {
@@ -776,9 +777,13 @@ var BASE_CATS = {
     careerYPR:          {label:'Career Yards/Rec',     type:'skill',dMin:1.0,  step:0.1, thresholds:[10,11,12,13,14,15,16,17,18], tolerance:0.12, minBuffer:1.5},
     seasonHighRecYards: {label:'High Season Rec Yds',  type:'skill',dMin:200,  step:50,  thresholds:[500,700,900,1000,1200,1400,1600,1800], tolerance:0.20, minBuffer:200},
     seasonHighReceptions:{label:'High Season Recs',   type:'skill',dMin:10,   step:5,   thresholds:[40,60,80,100,120,140], tolerance:0.18, minBuffer:12},
+    // New stats
+    careerTargets:      {label:'Career Targets',       type:'skill',dMin:50,   step:10,  thresholds:[100,200,400,600,800,1000,1200], tolerance:0.20, minBuffer:100},
+    careerTotalTDs:     {label:'Career Total TDs',     type:'RB',   dMin:10,   step:1,   thresholds:[20,40,60,80,100,125,150], tolerance:0.25, minBuffer:15},
+    seasonHighRecTDs:   {label:'High Season Rec TDs',  type:'skill',dMin:3,    step:1,   thresholds:[4,6,8,10,12,14,16], tolerance:0.25, minBuffer:3},
+    seasonHighRushTDs:  {label:'High Season Rush TDs', type:'RB',   dMin:3,    step:1,   thresholds:[5,8,10,12,15,18,20], tolerance:0.25, minBuffer:3},
     // Universal
     seasons:            {label:'Seasons Played',       type:'both', dMin:2,    step:1,   thresholds:[5,7,9,12,15,18,20], tolerance:0.30, minBuffer:2},
-    careerRecYardsRB:   {label:'Career Rec Yards',     type:'RB',   dMin:500,  step:100, thresholds:[1000,2000,3000,4000,5000,6000], tolerance:0.25, minBuffer:500},
 };
 
 var BASE_BULL = {
@@ -786,14 +791,15 @@ var BASE_BULL = {
     careerCompPct:0.01, careerSacks:5, careerGamesStarted:5, careerQBRushYards:100,
     seasonHighPassYards:100, seasonHighPassTDs:2,
     careerRushYards:300, careerRushTDs:5, careerYPC:0.1, careerRushAttempts:50,
-    seasonHighRushYards:50, careerFumbles:3, careerRecYardsRB:100,
+    seasonHighRushYards:50, careerFumbles:3,
     careerRecYards:300, careerReceptions:20, careerRecTDs:5, careerYPR:0.3,
     seasonHighRecYards:50, seasonHighReceptions:5,
+    careerTargets:5, careerTotalTDs:3, seasonHighRecTDs:1, seasonHighRushTDs:1,
     seasons:1
 };
 
 var SBS_CATS_QB = [
-    {key:'careerGamesStarted', label:'Career Starts'},
+    {key:'careerGamesStarted', label:'Career Games'},
     {key:'careerPassYards',    label:'Career Pass Yds'},
     {key:'careerPassTDs',      label:'Career Pass TDs'},
     {key:'careerINTs',         label:'Career INTs',      lowerBetter:true},
@@ -812,9 +818,9 @@ var SBS_CATS_RB = [
     {key:'careerRecYards',      label:'Career Rec Yds'},
     {key:'careerReceptions',    label:'Career Receptions'},
     {key:'careerFumbles',       label:'Career Fumbles',   lowerBetter:true},
-    {key:'careerRecYardsRB',    label:'Career Rec Yds (RB)'},
+    {key:'careerTotalTDs',      label:'Career Total TDs'},
     {key:'seasonHighRushYards', label:'High Season Yds'},
-    {key:'seasons',             label:'Seasons Played'},
+    {key:'careerGamesStarted',  label:'Career Games'},
 ];
 var SBS_CATS_WR = [
     {key:'careerRecYards',       label:'Career Rec Yds'},
@@ -823,10 +829,10 @@ var SBS_CATS_WR = [
     {key:'careerYPR',            label:'Yards per Rec'},
     {key:'seasonHighRecYards',   label:'High Season Yds'},
     {key:'seasonHighReceptions', label:'High Season Recs'},
-    {key:'careerRushYards',      label:'Career Rush Yds'},
+    {key:'careerTargets',        label:'Career Targets'},
     {key:'careerFumbles',        label:'Career Fumbles', lowerBetter:true},
-    {key:'careerGamesStarted',   label:'Career Starts'},
-    {key:'seasons',              label:'Seasons Played'},
+    {key:'careerGamesStarted',   label:'Career Games'},
+    {key:'seasonHighRecTDs',     label:'High Season TDs'},
 ];
 var SBS_CATS_TE = SBS_CATS_WR; // TEs share same categories
 
