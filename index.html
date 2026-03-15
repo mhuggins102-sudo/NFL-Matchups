@@ -1172,8 +1172,8 @@ function pickPositionType() {
 function generateHowMuch() {
     var posType = pickPositionType();
     var cats = pickCatPool(posType);
-    var maxUsage = 2;
-    var validCats = cats.filter(function(k) { return (categoryHistory[k] || 0) < maxUsage; });
+    // Prefer unused categories before allowing repeats
+    var validCats = cats.filter(function(k) { return !categoryHistory[k]; });
     if (validCats.length === 0) validCats = cats;
 
     for (var attempt = 0; attempt < 300; attempt++) {
@@ -1436,7 +1436,7 @@ function showUI(mode) {
         dom.rerollBtn.classList.add('text-red-400','bg-red-100','dark:bg-red-900/20','dark:text-red-500','cursor-not-allowed','opacity-60');
         dom.rerollBtn.disabled = true;
     } else {
-        dom.rerollBtn.classList.remove('text-red-400','bg-red-100','dark:bg-red-900/20','dark:text-red-500','cursor-not-allowed','opacity-60');
+        dom.rerollBtn.classList.remove('text-red-400','bg-red-100','dark:bg-red-900/20','dark:text-red-500','cursor-not-allowed','opacity-60','opacity-50');
         dom.rerollBtn.classList.add('text-emerald-600','bg-emerald-100','hover:bg-emerald-200','dark:bg-emerald-900/30','dark:text-emerald-400');
         dom.rerollBtn.disabled = false;
     }

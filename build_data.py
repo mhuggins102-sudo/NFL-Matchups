@@ -20,14 +20,19 @@ import requests
 STATS_URL = "https://github.com/nflverse/nflverse-data/releases/download/player_stats/player_stats_{year}.csv"
 ROSTER_URL = "https://github.com/nflverse/nflverse-data/releases/download/rosters/roster_{year}.csv"
 START_YEAR = 1999
-END_YEAR = 2024
+END_YEAR = 2025
 OUT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-def download_csv(url):
+def download_csv(url, label=""):
     """Download and parse a CSV from a URL. Returns list of dicts."""
-    resp = requests.get(url, timeout=60)
+    try:
+        resp = requests.get(url, timeout=60)
+    except requests.RequestException as e:
+        print(f"\n  WARNING: Failed to download {label or url}: {e}")
+        return []
     if resp.status_code != 200:
+        print(f"\n  WARNING: HTTP {resp.status_code} for {label or url} — data will be missing!")
         return []
     reader = csv.DictReader(io.StringIO(resp.text))
     return list(reader)
@@ -68,9 +73,9 @@ def main():
         url = STATS_URL.format(year=year)
         sys.stdout.write(f"\rDownloading stats {year}...")
         sys.stdout.flush()
-        rows = download_csv(url)
+        rows = download_csv(url, label=f"stats {year}")
         if not rows:
-            print(f" [skipped]")
+            print(f" [skipped — no data returned]")
             continue
 
         # Aggregate by player+season first for season highs
@@ -176,7 +181,7 @@ def main():
         url = ROSTER_URL.format(year=year)
         sys.stdout.write(f"\rDownloading roster {year}...")
         sys.stdout.flush()
-        rows = download_csv(url)
+        rows = download_csv(url, label=f"roster {year}")
         if not rows:
             continue
 
