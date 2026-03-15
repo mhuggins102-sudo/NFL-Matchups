@@ -16,6 +16,7 @@
         }
     </script>
     <script data-cfasync="false" src="https://cdn.tailwindcss.com"></script>
+    <script data-cfasync="false" src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
     <script data-cfasync="false">tailwind.config = { darkMode: 'class' }</script>
     <style>
         .hidden { display: none !important; }
@@ -159,8 +160,17 @@
 <main class="flex-1 w-full max-w-md mx-auto px-5 overflow-y-auto no-scrollbar relative">
     <div id="custom-alert" class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white border border-green-700 px-4 py-2 rounded-2xl shadow-xl z-[80] font-bold text-sm opacity-0 pointer-events-none transition-all duration-300 text-center max-w-[calc(100%-2.5rem)]"></div>
 
+    <!-- LOADING SCREEN -->
+    <div id="loading-screen" class="flex flex-col items-center justify-center h-full pt-16">
+        <h2 class="text-4xl font-black text-gray-900 dark:text-white tracking-tighter mb-6">NFL<span class="text-green-600">Matchups</span></h2>
+        <div class="w-48 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div id="load-bar" class="h-full bg-green-500 rounded-full transition-all duration-300" style="width:0%"></div>
+        </div>
+        <div id="load-text" class="text-xs text-gray-500 dark:text-gray-400 mt-2 font-semibold">Loading player data...</div>
+    </div>
+
     <!-- START SCREEN -->
-    <div id="start-screen" class="flex flex-col gap-6 w-full pt-4">
+    <div id="start-screen" class="hidden flex flex-col gap-6 w-full pt-4">
         <div class="text-center space-y-1 mb-2 mt-4">
             <h2 class="text-4xl font-black text-gray-900 dark:text-white tracking-tighter">NFL<span class="text-green-600">Matchups</span></h2>
             <p class="text-sm font-medium text-gray-600 dark:text-gray-400">The Ultimate Stat Estimation Game</p>
@@ -617,8 +627,8 @@
         </div>
         <div class="p-5 text-sm text-gray-600 dark:text-gray-300 space-y-4">
             <div><div class="font-black text-gray-800 dark:text-white mb-1">Veteran</div><p class="text-xs">Multi-year starters: QBs 64+ starts, RBs 750+ carries, WRs/TEs 250+ receptions.</p></div>
-            <div class="border-t border-gray-200 dark:border-gray-800 pt-3"><div class="font-black text-gray-800 dark:text-white mb-1">All-Pro</div><p class="text-xs">Elite contributors: Career AV ≥ 80.</p></div>
-            <div class="border-t border-gray-200 dark:border-gray-800 pt-3"><div class="font-black text-gray-800 dark:text-white mb-1">HOF</div><p class="text-xs">Legends only: Career AV ≥ 130 or position HOF thresholds.</p></div>
+            <div class="border-t border-gray-200 dark:border-gray-800 pt-3"><div class="font-black text-gray-800 dark:text-white mb-1">All-Pro</div><p class="text-xs">Elite contributors: QBs 120+ starts or 200+ pass TDs, RBs 8000+ rush yds, WR/TEs 8000+ rec yds.</p></div>
+            <div class="border-t border-gray-200 dark:border-gray-800 pt-3"><div class="font-black text-gray-800 dark:text-white mb-1">HOF</div><p class="text-xs">Legends only: QBs 180+ starts or 300+ pass TDs, RBs 10000+ rush yds, WR/TEs 10000+ rec yds.</p></div>
         </div>
     </div>
 </div>
@@ -626,101 +636,116 @@
 <script>
 // ═══════════════════════════════════════
 // NFL MATCHUPS — PLAYER DATA
-// Stats sourced from Pro Football Reference career totals
+// Loaded from CSV files (nflverse + Legends)
 // ═══════════════════════════════════════
 
-// Player format: { id, name, pos, av, gs, decades, stats: { ... } }
-// decades = Set of decade start years the player was active in
+var NFL_PLAYERS = [];
 
-var NFL_PLAYERS = [
-  // ── QBs ──────────────────────────────────────────────────────────────
-  {id:'brady',    name:'Tom Brady',         pos:'QB', av:243, gs:335, decades:[1990,2000,2010,2020], stats:{careerPassYards:89214,careerPassTDs:649,careerINTs:211,careerPasserRating:97.7,careerCompPct:0.641,careerQBWins:251,careerGamesStarted:335,careerQBRushYards:1121,seasonHighPassYards:5235,seasonHighPassTDs:50,seasons:23,careerProBowls:15,careerAllPro:3,careerAV:243}},
-  {id:'manning_p',name:'Peyton Manning',    pos:'QB', av:212, gs:266, decades:[1990,2000,2010], stats:{careerPassYards:71940,careerPassTDs:539,careerINTs:251,careerPasserRating:96.5,careerCompPct:0.651,careerQBWins:186,careerGamesStarted:266,careerQBRushYards:667,seasonHighPassYards:4700,seasonHighPassTDs:55,seasons:18,careerProBowls:14,careerAllPro:7,careerAV:212}},
-  {id:'favre',    name:'Brett Favre',       pos:'QB', av:172, gs:298, decades:[1990,2000,2010], stats:{careerPassYards:71838,careerPassTDs:508,careerINTs:336,careerPasserRating:86.0,careerCompPct:0.619,careerQBWins:186,careerGamesStarted:298,careerQBRushYards:1717,seasonHighPassYards:4413,seasonHighPassTDs:39,seasons:20,careerProBowls:11,careerAllPro:3,careerAV:172}},
-  {id:'rodgers',  name:'Aaron Rodgers',     pos:'QB', av:185, gs:234, decades:[2000,2010,2020], stats:{careerPassYards:59055,careerPassTDs:475,careerINTs:105,careerPasserRating:103.1,careerCompPct:0.653,careerQBWins:167,careerGamesStarted:234,careerQBRushYards:3477,seasonHighPassYards:4643,seasonHighPassTDs:48,seasons:19,careerProBowls:10,careerAllPro:5,careerAV:185}},
-  {id:'brees',    name:'Drew Brees',        pos:'QB', av:187, gs:268, decades:[2000,2010,2020], stats:{careerPassYards:80358,careerPassTDs:571,careerINTs:243,careerPasserRating:98.7,careerCompPct:0.668,careerQBWins:172,careerGamesStarted:268,careerQBRushYards:675,seasonHighPassYards:5476,seasonHighPassTDs:46,seasons:20,careerProBowls:13,careerAllPro:1,careerAV:187}},
-  {id:'mahomes',  name:'Patrick Mahomes',   pos:'QB', av:110, gs:116, decades:[2010,2020], stats:{careerPassYards:30440,careerPassTDs:240,careerINTs:65,careerPasserRating:105.2,careerCompPct:0.669,careerQBWins:91,careerGamesStarted:116,careerQBRushYards:2282,seasonHighPassYards:5097,seasonHighPassTDs:50,seasons:8,careerProBowls:6,careerAllPro:3,careerAV:110}},
-  {id:'montana',  name:'Joe Montana',       pos:'QB', av:133, gs:164, decades:[1970,1980,1990], stats:{careerPassYards:40551,careerPassTDs:273,careerINTs:139,careerPasserRating:92.3,careerCompPct:0.632,careerQBWins:117,careerGamesStarted:164,careerQBRushYards:1676,seasonHighPassYards:3910,seasonHighPassTDs:31,seasons:16,careerProBowls:8,careerAllPro:5,careerAV:133}},
-  {id:'elway',    name:'John Elway',        pos:'QB', av:148, gs:231, decades:[1980,1990], stats:{careerPassYards:51475,careerPassTDs:300,careerINTs:226,careerPasserRating:79.9,careerCompPct:0.562,careerQBWins:148,careerGamesStarted:231,careerQBRushYards:3407,seasonHighPassYards:4030,seasonHighPassTDs:27,seasons:16,careerProBowls:9,careerAllPro:1,careerAV:148}},
-  {id:'marino',   name:'Dan Marino',        pos:'QB', av:155, gs:240, decades:[1980,1990], stats:{careerPassYards:61361,careerPassTDs:420,careerINTs:252,careerPasserRating:86.4,careerCompPct:0.590,careerQBWins:147,careerGamesStarted:240,careerQBRushYards:87,seasonHighPassYards:5084,seasonHighPassTDs:48,seasons:17,careerProBowls:9,careerAllPro:3,careerAV:155}},
-  {id:'moon',     name:'Warren Moon',       pos:'QB', av:120, gs:208, decades:[1980,1990,2000], stats:{careerPassYards:49325,careerPassTDs:291,careerINTs:233,careerPasserRating:80.9,careerCompPct:0.587,careerQBWins:102,careerGamesStarted:208,careerQBRushYards:1736,seasonHighPassYards:4689,seasonHighPassTDs:33,seasons:17,careerProBowls:9,careerAllPro:1,careerAV:120}},
-  {id:'young',    name:'Steve Young',       pos:'QB', av:121, gs:169, decades:[1980,1990], stats:{careerPassYards:33124,careerPassTDs:232,careerINTs:107,careerPasserRating:96.8,careerCompPct:0.647,careerQBWins:94,careerGamesStarted:169,careerQBRushYards:4239,seasonHighPassYards:4170,seasonHighPassTDs:36,seasons:15,careerProBowls:7,careerAllPro:4,careerAV:121}},
-  {id:'stafford', name:'Matthew Stafford',  pos:'QB', av:135, gs:232, decades:[2000,2010,2020], stats:{careerPassYards:56753,careerPassTDs:382,careerINTs:192,careerPasserRating:89.6,careerCompPct:0.635,careerQBWins:131,careerGamesStarted:232,careerQBRushYards:1097,seasonHighPassYards:5038,seasonHighPassTDs:41,seasons:16,careerProBowls:1,careerAllPro:0,careerAV:135}},
-  {id:'rivers',   name:'Philip Rivers',     pos:'QB', av:163, gs:240, decades:[2000,2010,2020], stats:{careerPassYards:63440,careerPassTDs:421,careerINTs:209,careerPasserRating:95.2,careerCompPct:0.652,careerQBWins:134,careerGamesStarted:240,careerQBRushYards:361,seasonHighPassYards:4710,seasonHighPassTDs:34,seasons:17,careerProBowls:8,careerAllPro:1,careerAV:163}},
-  {id:'roethlis', name:'Ben Roethlisberger', pos:'QB', av:164, gs:240, decades:[2000,2010,2020], stats:{careerPassYards:64088,careerPassTDs:418,careerINTs:211,careerPasserRating:94.0,careerCompPct:0.641,careerQBWins:165,careerGamesStarted:240,careerQBRushYards:2400,seasonHighPassYards:4952,seasonHighPassTDs:34,seasons:18,careerProBowls:6,careerAllPro:1,careerAV:164}},
-  {id:'wilson_r', name:'Russell Wilson',    pos:'QB', av:135, gs:197, decades:[2010,2020], stats:{careerPassYards:42683,careerPassTDs:292,careerINTs:107,careerPasserRating:101.8,careerCompPct:0.651,careerQBWins:135,careerGamesStarted:197,careerQBRushYards:6791,seasonHighPassYards:4219,seasonHighPassTDs:34,seasons:13,careerProBowls:9,careerAllPro:3,careerAV:135}},
-  {id:'jackson_l',name:'Lamar Jackson',     pos:'QB', av:92,  gs:101, decades:[2010,2020], stats:{careerPassYards:17407,careerPassTDs:132,careerINTs:36,careerPasserRating:102.5,careerCompPct:0.640,careerQBWins:69,careerGamesStarted:101,careerQBRushYards:6146,seasonHighPassYards:3127,seasonHighPassTDs:36,seasons:7,careerProBowls:4,careerAllPro:2,careerAV:92}},
-  {id:'aikman',   name:'Troy Aikman',       pos:'QB', av:114, gs:165, decades:[1980,1990,2000], stats:{careerPassYards:32942,careerPassTDs:165,careerINTs:141,careerPasserRating:81.6,careerCompPct:0.615,careerQBWins:94,careerGamesStarted:165,careerQBRushYards:1016,seasonHighPassYards:3445,seasonHighPassTDs:23,seasons:12,careerProBowls:6,careerAllPro:1,careerAV:114}},
-  {id:'manning_e',name:'Eli Manning',       pos:'QB', av:141, gs:234, decades:[2000,2010], stats:{careerPassYards:57023,careerPassTDs:366,careerINTs:244,careerPasserRating:84.1,careerCompPct:0.601,careerQBWins:117,careerGamesStarted:234,careerQBRushYards:301,seasonHighPassYards:4410,seasonHighPassTDs:35,seasons:16,careerProBowls:4,careerAllPro:0,careerAV:141}},
-  {id:'luck',     name:'Andrew Luck',       pos:'QB', av:100, gs:86,  decades:[2010], stats:{careerPassYards:23671,careerPassTDs:171,careerINTs:83,careerPasserRating:89.5,careerCompPct:0.602,careerQBWins:53,careerGamesStarted:86,careerQBRushYards:1590,seasonHighPassYards:4761,seasonHighPassTDs:40,seasons:7,careerProBowls:4,careerAllPro:0,careerAV:100}},
-  {id:'newton',   name:'Cam Newton',        pos:'QB', av:128, gs:163, decades:[2010,2020], stats:{careerPassYards:29041,careerPassTDs:182,careerINTs:108,careerPasserRating:84.9,careerCompPct:0.594,careerQBWins:75,careerGamesStarted:163,careerQBRushYards:5628,seasonHighPassYards:3837,seasonHighPassTDs:35,seasons:11,careerProBowls:3,careerAllPro:1,careerAV:128}},
-  {id:'tarkenton',name:'Fran Tarkenton',    pos:'QB', av:135, gs:246, decades:[1960,1970,1980], stats:{careerPassYards:47003,careerPassTDs:342,careerINTs:266,careerPasserRating:80.4,careerCompPct:0.570,careerQBWins:124,careerGamesStarted:246,careerQBRushYards:3674,seasonHighPassYards:2561,seasonHighPassTDs:25,seasons:18,careerProBowls:9,careerAllPro:2,careerAV:135}},
-  {id:'ryan_m',   name:'Matt Ryan',         pos:'QB', av:152, gs:269, decades:[2000,2010,2020], stats:{careerPassYards:62792,careerPassTDs:396,careerINTs:203,careerPasserRating:94.1,careerPassPct:0.638,careerQBWins:159,careerGamesStarted:269,careerQBRushYards:1154,seasonHighPassYards:4944,seasonHighPassTDs:38,seasons:16,careerProBowls:4,careerAllPro:1,careerAV:152}},
-  {id:'romo',     name:'Tony Romo',         pos:'QB', av:97,  gs:127, decades:[2000,2010], stats:{careerPassYards:34183,careerPassTDs:248,careerINTs:117,careerPasserRating:97.1,careerCompPct:0.655,careerQBWins:78,careerGamesStarted:127,careerQBRushYards:1194,seasonHighPassYards:4903,seasonHighPassTDs:36,seasons:14,careerProBowls:4,careerAllPro:1,careerAV:97}},
-  {id:'allen_j',  name:'Josh Allen',        pos:'QB', av:95,  gs:108, decades:[2010,2020], stats:{careerPassYards:27133,careerPassTDs:216,careerINTs:78,careerPasserRating:94.3,careerCompPct:0.625,careerQBWins:76,careerGamesStarted:108,careerQBRushYards:4707,seasonHighPassYards:4544,seasonHighPassTDs:37,seasons:7,careerProBowls:5,careerAllPro:1,careerAV:95}},
-  // ── RBs ──────────────────────────────────────────────────────────────
-  {id:'payton',   name:'Walter Payton',     pos:'RB', av:173, gs:186, decades:[1970,1980], stats:{careerRushYards:16726,careerRushTDs:110,careerYPC:4.36,careerRushAttempts:3838,careerRecYards:4538,careerReceptions:492,careerRecTDs:15,careerYPR:9.2,careerFumbles:86,seasonHighRushYards:1852,seasonHighRushTDs:14,seasons:13,careerProBowls:9,careerAllPro:5,careerAV:173}},
-  {id:'sanders_b',name:'Barry Sanders',     pos:'RB', av:147, gs:153, decades:[1980,1990], stats:{careerRushYards:15269,careerRushTDs:99,careerYPC:4.99,careerRushAttempts:3062,careerRecYards:2921,careerReceptions:352,careerRecTDs:10,careerYPR:8.3,careerFumbles:41,seasonHighRushYards:2358,seasonHighRushTDs:16,seasons:10,careerProBowls:10,careerAllPro:6,careerAV:147}},
-  {id:'smith_e',  name:'Emmitt Smith',      pos:'RB', av:156, gs:226, decades:[1990,2000], stats:{careerRushYards:18355,careerRushTDs:164,careerYPC:4.17,careerRushAttempts:4409,careerRecYards:3224,careerReceptions:515,careerRecTDs:11,careerYPR:6.3,careerFumbles:44,seasonHighRushYards:1773,seasonHighRushTDs:25,seasons:15,careerProBowls:8,careerAllPro:4,careerAV:156}},
-  {id:'tomlinson',name:'LaDainian Tomlinson',pos:'RB',av:162, gs:228, decades:[2000,2010], stats:{careerRushYards:13684,careerRushTDs:145,careerYPC:4.34,careerRushAttempts:3174,careerRecYards:4772,careerReceptions:624,careerRecTDs:17,careerYPR:7.6,careerFumbles:49,seasonHighRushYards:1815,seasonHighRushTDs:28,seasons:11,careerProBowls:5,careerAllPro:4,careerAV:162}},
-  {id:'peterson', name:'Adrian Peterson',   pos:'RB', av:147, gs:176, decades:[2000,2010,2020], stats:{careerRushYards:14820,careerRushTDs:120,careerYPC:4.54,careerRushAttempts:3263,careerRecYards:2433,careerReceptions:339,careerRecTDs:6,careerYPR:7.2,careerFumbles:91,seasonHighRushYards:2097,seasonHighRushTDs:18,seasons:15,careerProBowls:7,careerAllPro:4,careerAV:147}},
-  {id:'dickerson',name:'Eric Dickerson',    pos:'RB', av:119, gs:144, decades:[1980,1990], stats:{careerRushYards:13259,careerRushTDs:90,careerYPC:4.40,careerRushAttempts:2996,careerRecYards:2137,careerReceptions:281,careerRecTDs:6,careerYPR:7.6,careerFumbles:78,seasonHighRushYards:2105,seasonHighRushTDs:18,seasons:11,careerProBowls:6,careerAllPro:3,careerAV:119}},
-  {id:'faulk_m',  name:'Marshall Faulk',    pos:'RB', av:149, gs:176, decades:[1990,2000], stats:{careerRushYards:12279,careerRushTDs:100,careerYPC:4.30,careerRushAttempts:2836,careerRecYards:6875,careerReceptions:767,careerRecTDs:36,careerYPR:8.97,careerFumbles:77,seasonHighRushYards:1359,seasonHighRushTDs:24,seasons:12,careerProBowls:7,careerAllPro:3,careerAV:149}},
-  {id:'henry',    name:'Derrick Henry',     pos:'RB', av:98,  gs:129, decades:[2010,2020], stats:{careerRushYards:10234,careerRushTDs:90,careerYPC:4.83,careerRushAttempts:2117,careerRecYards:1204,careerReceptions:163,careerRecTDs:4,careerYPR:7.4,careerFumbles:13,seasonHighRushYards:2027,seasonHighRushTDs:18,seasons:9,careerProBowls:4,careerAllPro:2,careerAV:98}},
-  {id:'bell',     name:'Le\'Veon Bell',     pos:'RB', av:89,  gs:95,  decades:[2010,2020], stats:{careerRushYards:7985,careerRushTDs:45,careerYPC:4.29,careerRushAttempts:1861,careerRecYards:3671,careerReceptions:483,careerRecTDs:18,careerYPR:7.6,careerFumbles:14,seasonHighRushYards:1884,seasonHighRushTDs:11,seasons:9,careerProBowls:3,careerAllPro:2,careerAV:89}},
-  {id:'elliot',   name:'Ezekiel Elliott',   pos:'RB', av:98,  gs:129, decades:[2010,2020], stats:{careerRushYards:9024,careerRushTDs:73,careerYPC:4.48,careerRushAttempts:2013,careerRecYards:2792,careerReceptions:380,careerRecTDs:16,careerYPR:7.3,careerFumbles:15,seasonHighRushYards:1631,seasonHighRushTDs:15,seasons:9,careerProBowls:3,careerAllPro:1,careerAV:98}},
-  {id:'taylor_j', name:'Jim Taylor',        pos:'RB', av:88,  gs:132, decades:[1950,1960,1970], stats:{careerRushYards:8597,careerRushTDs:83,careerYPC:4.38,careerRushAttempts:1941,careerRecYards:1756,careerReceptions:225,careerRecTDs:10,careerYPR:7.8,careerFumbles:30,seasonHighRushYards:1474,seasonHighRushTDs:19,seasons:10,careerProBowls:5,careerAllPro:4,careerAV:88}},
-  {id:'campbell_e',name:'Earl Campbell',    pos:'RB', av:99,  gs:115, decades:[1970,1980], stats:{careerRushYards:9407,careerRushTDs:74,careerYPC:4.32,careerRushAttempts:2187,careerRecYards:806,careerReceptions:121,careerRecTDs:3,careerYPR:6.7,careerFumbles:52,seasonHighRushYards:1934,seasonHighRushTDs:19,seasons:8,careerProBowls:5,careerAllPro:4,careerAV:99}},
-  {id:'gurley',   name:'Todd Gurley',       pos:'RB', av:96,  gs:97,  decades:[2010,2020], stats:{careerRushYards:6654,careerRushTDs:64,careerYPC:4.57,careerRushAttempts:1456,careerRecYards:2788,careerReceptions:373,careerRecTDs:19,careerYPR:7.5,careerFumbles:16,seasonHighRushYards:1305,seasonHighRushTDs:19,seasons:7,careerProBowls:2,careerAllPro:1,careerAV:96}},
-  {id:'mccaffrey',name:'Christian McCaffrey',pos:'RB',av:98, gs:106, decades:[2010,2020], stats:{careerRushYards:7481,careerRushTDs:57,careerYPC:4.49,careerRushAttempts:1666,careerRecYards:5186,careerReceptions:634,careerRecTDs:34,careerYPR:8.2,careerFumbles:12,seasonHighRushYards:1387,seasonHighRushTDs:14,seasons:8,careerProBowls:3,careerAllPro:1,careerAV:98}},
-  // ── WRs ──────────────────────────────────────────────────────────────
-  {id:'rice_j',   name:'Jerry Rice',        pos:'WR', av:219, gs:274, decades:[1980,1990,2000], stats:{careerRecYards:22895,careerReceptions:1549,careerRecTDs:197,careerYPR:14.78,seasonHighRecYards:1848,seasonHighReceptions:122,seasons:20,careerProBowls:13,careerAllPro:10,careerAV:219}},
-  {id:'moss_r',   name:'Randy Moss',        pos:'WR', av:148, gs:218, decades:[1990,2000,2010], stats:{careerRecYards:15292,careerReceptions:982,careerRecTDs:156,careerYPR:15.57,seasonHighRecYards:1632,seasonHighReceptions:106,seasons:14,careerProBowls:6,careerAllPro:4,careerAV:148}},
-  {id:'johnson_c',name:'Calvin Johnson',    pos:'WR', av:108, gs:135, decades:[2000,2010], stats:{careerRecYards:11619,careerReceptions:731,careerRecTDs:83,careerYPR:15.90,seasonHighRecYards:1964,seasonHighReceptions:122,seasons:9,careerProBowls:6,careerAllPro:3,careerAV:108}},
-  {id:'fitzgerald',name:'Larry Fitzgerald', pos:'WR', av:158, gs:271, decades:[2000,2010,2020], stats:{careerRecYards:17492,careerReceptions:1432,careerRecTDs:121,careerYPR:12.22,seasonHighRecYards:1431,seasonHighReceptions:107,seasons:17,careerProBowls:11,careerAllPro:1,careerAV:158}},
-  {id:'harrison_m',name:'Marvin Harrison',  pos:'WR', av:113, gs:190, decades:[1990,2000], stats:{careerRecYards:14580,careerReceptions:1102,careerRecTDs:128,careerYPR:13.23,seasonHighRecYards:1722,seasonHighReceptions:143,seasons:13,careerProBowls:8,careerAllPro:4,careerAV:113}},
-  {id:'smith_s',  name:'Steve Smith Sr.',   pos:'WR', av:131, gs:211, decades:[2000,2010], stats:{careerRecYards:14731,careerReceptions:1031,careerRecTDs:81,careerYPR:14.29,seasonHighRecYards:1563,seasonHighReceptions:103,seasons:16,careerProBowls:5,careerAllPro:2,careerAV:131}},
-  {id:'owens',    name:'Terrell Owens',     pos:'WR', av:133, gs:219, decades:[1990,2000,2010], stats:{careerRecYards:15934,careerReceptions:1078,careerRecTDs:153,careerYPR:14.78,seasonHighRecYards:1451,seasonHighReceptions:100,seasons:15,careerProBowls:6,careerAllPro:3,careerAV:133}},
-  {id:'carter_c', name:'Cris Carter',       pos:'WR', av:122, gs:218, decades:[1980,1990,2000], stats:{careerRecYards:13899,careerReceptions:1101,careerRecTDs:130,careerYPR:12.62,seasonHighRecYards:1371,seasonHighReceptions:122,seasons:16,careerProBowls:8,careerAllPro:2,careerAV:122}},
-  {id:'jeffery',  name:'Alshon Jeffery',    pos:'WR', av:67,  gs:92,  decades:[2010,2020], stats:{careerRecYards:6590,careerReceptions:512,careerRecTDs:54,careerYPR:12.87,seasonHighRecYards:1421,seasonHighReceptions:89,seasons:10,careerProBowls:1,careerAllPro:0,careerAV:67}},
-  {id:'hill_t',   name:'Tyreek Hill',       pos:'WR', av:95,  gs:123, decades:[2010,2020], stats:{careerRecYards:11567,careerReceptions:784,careerRecTDs:82,careerYPR:14.75,seasonHighRecYards:1799,seasonHighReceptions:119,seasons:9,careerProBowls:7,careerAllPro:4,careerAV:95}},
-  {id:'adams_d',  name:'Davante Adams',     pos:'WR', av:90,  gs:139, decades:[2010,2020], stats:{careerRecYards:10196,careerReceptions:841,careerRecTDs:87,careerYPR:12.12,seasonHighRecYards:1374,seasonHighReceptions:115,seasons:11,careerProBowls:6,careerAllPro:3,careerAV:90}},
-  {id:'diggs_s',  name:'Stefon Diggs',      pos:'WR', av:75,  gs:120, decades:[2010,2020], stats:{careerRecYards:9741,careerReceptions:714,careerRecTDs:56,careerYPR:13.64,seasonHighRecYards:1535,seasonHighReceptions:127,seasons:10,careerProBowls:2,careerAllPro:1,careerAV:75}},
-  {id:'walker_j', name:'Javon Walker',      pos:'WR', av:29,  gs:56,  decades:[2000], stats:{careerRecYards:3274,careerReceptions:249,careerRecTDs:22,careerYPR:13.15,seasonHighRecYards:1382,seasonHighReceptions:89,seasons:7,careerProBowls:1,careerAllPro:0,careerAV:29}},
-  {id:'johnson_a',name:'Andre Johnson',     pos:'WR', av:119, gs:193, decades:[2000,2010], stats:{careerRecYards:14185,careerReceptions:1062,careerRecTDs:70,careerYPR:13.36,seasonHighRecYards:1598,seasonHighReceptions:115,seasons:14,careerProBowls:7,careerAllPro:2,careerAV:119}},
-  {id:'white_r',  name:'Roddy White',       pos:'WR', av:88,  gs:169, decades:[2000,2010], stats:{careerRecYards:10863,careerReceptions:808,careerRecTDs:53,careerYPR:13.45,seasonHighRecYards:1389,seasonHighReceptions:115,seasons:11,careerProBowls:4,careerAllPro:1,careerAV:88}},
-  // ── TEs ──────────────────────────────────────────────────────────────
-  {id:'gonzalez', name:'Tony Gonzalez',     pos:'TE', av:181, gs:270, decades:[1990,2000,2010], stats:{careerRecYards:15127,careerReceptions:1325,careerRecTDs:111,careerYPR:11.42,seasonHighRecYards:1258,seasonHighReceptions:102,seasons:17,careerProBowls:14,careerAllPro:6,careerAV:181}},
-  {id:'gronkowski',name:'Rob Gronkowski',   pos:'TE', av:135, gs:143, decades:[2010,2020], stats:{careerRecYards:9286,careerReceptions:621,careerRecTDs:92,careerYPR:14.95,seasonHighRecYards:1327,seasonHighReceptions:90,seasons:11,careerProBowls:5,careerAllPro:4,careerAV:135}},
-  {id:'gates',    name:'Antonio Gates',     pos:'TE', av:126, gs:215, decades:[2000,2010,2020], stats:{careerRecYards:11841,careerReceptions:955,careerRecTDs:116,careerYPR:12.40,seasonHighRecYards:1101,seasonHighReceptions:89,seasons:16,careerProBowls:8,careerAllPro:2,careerAV:126}},
-  {id:'witten',   name:'Jason Witten',      pos:'TE', av:140, gs:268, decades:[2000,2010,2020], stats:{careerRecYards:13046,careerReceptions:1228,careerRecTDs:74,careerYPR:10.62,seasonHighRecYards:1215,seasonHighReceptions:110,seasons:17,careerProBowls:11,careerAllPro:1,careerAV:140}},
-  {id:'thomas_v', name:'Vernon Davis',      pos:'TE', av:80,  gs:192, decades:[2000,2010], stats:{careerRecYards:7672,careerReceptions:583,careerRecTDs:63,careerYPR:13.16,seasonHighRecYards:965,seasonHighReceptions:76,seasons:14,careerProBowls:2,careerAllPro:1,careerAV:80}},
-  {id:'clark_g',  name:'Dallas Clark',      pos:'TE', av:74,  gs:119, decades:[2000,2010], stats:{careerRecYards:5765,careerReceptions:503,careerRecTDs:53,careerYPR:11.46,seasonHighRecYards:1106,seasonHighReceptions:100,seasons:11,careerProBowls:1,careerAllPro:1,careerAV:74}},
-  {id:'kelce',    name:'Travis Kelce',      pos:'TE', av:144, gs:175, decades:[2010,2020], stats:{careerRecYards:12386,careerReceptions:1020,careerRecTDs:75,careerYPR:12.14,seasonHighRecYards:1416,seasonHighReceptions:110,seasons:12,careerProBowls:9,careerAllPro:5,careerAV:144}},
-  {id:'waller_d', name:'Darren Waller',     pos:'TE', av:55,  gs:68,  decades:[2010,2020], stats:{careerRecYards:3591,careerReceptions:324,careerRecTDs:16,careerYPR:11.08,seasonHighRecYards:1196,seasonHighReceptions:107,seasons:9,careerProBowls:1,careerAllPro:0,careerAV:55}},
-  {id:'thomas_j', name:'Julius Thomas',     pos:'TE', av:44,  gs:68,  decades:[2010,2020], stats:{careerRecYards:3064,careerReceptions:261,careerRecTDs:35,careerYPR:11.74,seasonHighRecYards:788,seasonHighReceptions:65,seasons:7,careerProBowls:2,careerAllPro:0,careerAV:44}},
-  {id:'olsen',    name:'Greg Olsen',        pos:'TE', av:91,  gs:192, decades:[2000,2010,2020], stats:{careerRecYards:8444,careerReceptions:742,careerRecTDs:60,careerYPR:11.38,seasonHighRecYards:1104,seasonHighReceptions:77,seasons:14,careerProBowls:3,careerAllPro:0,careerAV:91}}
+// Stat keys to default to 0 if missing
+var STAT_KEYS = [
+    'careerQBRushYards','careerRushYards','careerRushTDs','careerYPC','careerRushAttempts',
+    'careerRecYards','careerReceptions','careerRecTDs','careerYPR','seasonHighRecYards',
+    'seasonHighReceptions','careerFumbles','seasonHighRushYards',
+    'careerPassYards','careerPassTDs','careerINTs','careerPasserRating','careerCompPct',
+    'careerSacks','careerGamesStarted','seasonHighPassYards','seasonHighPassTDs',
+    'careerRecYardsRB','seasons'
 ];
 
-// Compute seasons count and decades Set
-NFL_PLAYERS.forEach(function(p) {
-    p.decades = new Set(p.decades);
-    if (!p.stats.seasons) p.stats.seasons = p.seasons || 10;
-    else p.seasons = p.stats.seasons;
-    // Alias careerCompPct if stored as careerPassPct
-    if (p.stats.careerPassPct && !p.stats.careerCompPct) p.stats.careerCompPct = p.stats.careerPassPct;
-    // Default missing stats to 0
-    ['careerQBRushYards','careerRushYards','careerRushTDs','careerYPC','careerRushAttempts',
-     'careerRecYards','careerReceptions','careerRecTDs','careerYPR','seasonHighRecYards',
-     'seasonHighReceptions','careerFumbles','seasonHighRushYards','seasonHighRushTDs',
-     'careerPassYards','careerPassTDs','careerINTs','careerPasserRating','careerCompPct',
-     'careerQBWins','careerGamesStarted','seasonHighPassYards','seasonHighPassTDs',
-     'careerProBowls','careerAllPro','careerAV'].forEach(function(k) {
-        if (p.stats[k] === undefined) p.stats[k] = 0;
+function loadCSV(url, cb) {
+    Papa.parse(url, {
+        download: true,
+        header: true,
+        skipEmptyLines: true,
+        complete: function(results) { cb(results.data); },
+        error: function() { cb([]); }
     });
-    p.stats.seasons = p.stats.seasons || p.seasons || 10;
-});
+}
 
+function buildPlayers(people, stats, legends) {
+    // Index stats by playerID
+    var statsMap = {};
+    stats.forEach(function(row) { statsMap[row.playerID] = row; });
+
+    // Legends override: index by playerID
+    var legendPeople = {};
+    var legendStats = {};
+    legends.forEach(function(row) {
+        legendPeople[row.playerID] = row;
+        legendStats[row.playerID] = row; // legends have stats inline
+    });
+
+    // Build from nflverse People + Stats
+    var playerMap = {};
+    people.forEach(function(row) {
+        var pid = row.playerID;
+        var s = statsMap[pid];
+        if (!s) return;
+        var pos = row.pos;
+        if (pos !== 'QB' && pos !== 'RB' && pos !== 'WR' && pos !== 'TE') return;
+
+        var decades = row.decades ? row.decades.split('|').map(Number) : [];
+        var p = {
+            id: pid,
+            name: row.name,
+            pos: pos,
+            gs: parseInt(row.games) || 0,
+            decades: new Set(decades),
+            stats: {}
+        };
+        STAT_KEYS.forEach(function(k) { p.stats[k] = parseFloat(s[k]) || 0; });
+        p.stats.seasons = parseInt(row.seasons) || parseInt(s.seasons) || 1;
+        playerMap[pid] = p;
+    });
+
+    // Merge legends (override nflverse partial data)
+    Object.keys(legendPeople).forEach(function(pid) {
+        var row = legendPeople[pid];
+        var pos = row.pos;
+        if (pos !== 'QB' && pos !== 'RB' && pos !== 'WR' && pos !== 'TE') return;
+
+        var decades = row.decades ? row.decades.split('|').map(Number) : [];
+        var p = {
+            id: pid,
+            name: row.name,
+            pos: pos,
+            gs: parseInt(row.games) || 0,
+            decades: new Set(decades),
+            stats: {}
+        };
+        var s = legendStats[pid];
+        STAT_KEYS.forEach(function(k) { p.stats[k] = parseFloat(s[k]) || 0; });
+        p.stats.seasons = parseInt(row.seasons) || 1;
+        playerMap[pid] = p; // override any nflverse entry
+    });
+
+    NFL_PLAYERS = Object.values(playerMap);
+}
+
+function loadAllData(onDone) {
+    var loadBar = document.getElementById('load-bar');
+    var loadText = document.getElementById('load-text');
+    var loaded = 0;
+    var total = 3;
+    var results = {};
+
+    function tick(name, data) {
+        results[name] = data;
+        loaded++;
+        if (loadBar) loadBar.style.width = Math.round((loaded / total) * 100) + '%';
+        if (loadText) loadText.textContent = 'Loaded ' + loaded + '/' + total + ' files...';
+        if (loaded >= total) {
+            buildPlayers(results.people || [], results.stats || [], results.legends || []);
+            if (loadText) loadText.textContent = NFL_PLAYERS.length + ' players loaded!';
+            setTimeout(onDone, 300);
+        }
+    }
+
+    loadCSV('People.csv', function(d) { tick('people', d); });
+    loadCSV('Stats.csv', function(d) { tick('stats', d); });
+    loadCSV('Legends.csv', function(d) { tick('legends', d); });
+}
+
+/* REPLACED: hardcoded player data removed — now loaded from CSV via loadAllData() */
 
 // ═══════════════════════════════════════
 // CATEGORY DEFINITIONS
@@ -732,7 +757,7 @@ var BASE_CATS = {
     careerINTs:         {label:'Career INTs',          type:'QB',  dMin:15,   step:1,   lowerBetter:true, thresholds:[300,250,200,150,100,75,50], tolerance:0.25, minBuffer:20},
     careerPasserRating: {label:'Career Passer Rating', type:'QB',  dMin:3.0,  step:0.1, thresholds:[70,75,80,85,90,95,100,105], tolerance:0.10, minBuffer:5.0},
     careerCompPct:      {label:'Career Comp %',        type:'QB',  dMin:0.030,step:0.005,thresholds:[0.52,0.55,0.58,0.60,0.62,0.65,0.68], tolerance:0.08, minBuffer:0.04},
-    careerQBWins:       {label:'Career QB Wins',       type:'QB',  dMin:15,   step:1,   thresholds:[50,75,100,125,150,175,200], tolerance:0.25, minBuffer:20},
+    careerSacks:        {label:'Career Sacks Taken',   type:'QB',  dMin:20,   step:5,   lowerBetter:true, thresholds:[500,400,300,200,150,100,50], tolerance:0.25, minBuffer:25},
     careerGamesStarted: {label:'Career Starts',        type:'QB',  dMin:20,   step:1,   thresholds:[64,80,100,120,150,200,230], tolerance:0.25, minBuffer:25},
     careerQBRushYards:  {label:'Career Rush Yards',    type:'QB',  dMin:300,  step:100, thresholds:[500,1000,2000,3000,4000,5000,6000], tolerance:0.30, minBuffer:400},
     seasonHighPassYards:{label:'High Season Pass Yds', type:'QB',  dMin:500,  step:100, thresholds:[3000,3500,4000,4500,5000,5500], tolerance:0.18, minBuffer:500},
@@ -753,37 +778,33 @@ var BASE_CATS = {
     seasonHighReceptions:{label:'High Season Recs',   type:'skill',dMin:10,   step:5,   thresholds:[40,60,80,100,120,140], tolerance:0.18, minBuffer:12},
     // Universal
     seasons:            {label:'Seasons Played',       type:'both', dMin:2,    step:1,   thresholds:[5,7,9,12,15,18,20], tolerance:0.30, minBuffer:2},
-    careerProBowls:     {label:'Pro Bowl Selections',  type:'both', dMin:1,    step:1,   thresholds:[1,2,3,4,5,6,8,10,12], tolerance:0.50, minBuffer:1},
-    careerAllPro:       {label:'All-Pro Selections',   type:'both', dMin:1,    step:1,   thresholds:[1,2,3,4,5,6,8], tolerance:0.50, minBuffer:1},
-    careerAV:           {label:'Career Approx. Value', type:'both', dMin:15,   step:5,   thresholds:[30,50,70,90,110,130,150,175,200], tolerance:0.25, minBuffer:20},
     careerRecYardsRB:   {label:'Career Rec Yards',     type:'RB',   dMin:500,  step:100, thresholds:[1000,2000,3000,4000,5000,6000], tolerance:0.25, minBuffer:500},
 };
 
 var BASE_BULL = {
     careerPassYards:500, careerPassTDs:5, careerINTs:5, careerPasserRating:1.5,
-    careerCompPct:0.01, careerQBWins:5, careerGamesStarted:5, careerQBRushYards:100,
+    careerCompPct:0.01, careerSacks:5, careerGamesStarted:5, careerQBRushYards:100,
     seasonHighPassYards:100, seasonHighPassTDs:2,
     careerRushYards:300, careerRushTDs:5, careerYPC:0.1, careerRushAttempts:50,
     seasonHighRushYards:50, careerFumbles:3, careerRecYardsRB:100,
     careerRecYards:300, careerReceptions:20, careerRecTDs:5, careerYPR:0.3,
     seasonHighRecYards:50, seasonHighReceptions:5,
-    seasons:1, careerProBowls:1, careerAllPro:1, careerAV:10
+    seasons:1
 };
 
 var SBS_CATS_QB = [
-    {key:'careerAV',           label:'Career AV'},
+    {key:'careerGamesStarted', label:'Career Starts'},
     {key:'careerPassYards',    label:'Career Pass Yds'},
     {key:'careerPassTDs',      label:'Career Pass TDs'},
     {key:'careerINTs',         label:'Career INTs',      lowerBetter:true},
     {key:'careerPasserRating', label:'Passer Rating'},
     {key:'careerCompPct',      label:'Completion %'},
-    {key:'careerQBWins',       label:'Career Wins'},
-    {key:'careerGamesStarted', label:'Career Starts'},
+    {key:'careerSacks',        label:'Sacks Taken',      lowerBetter:true},
+    {key:'careerQBRushYards',  label:'Career Rush Yds'},
     {key:'seasonHighPassYards',label:'High Season Yds'},
     {key:'seasonHighPassTDs',  label:'High Season TDs'},
 ];
 var SBS_CATS_RB = [
-    {key:'careerAV',            label:'Career AV'},
     {key:'careerRushYards',     label:'Career Rush Yds'},
     {key:'careerRushTDs',       label:'Career Rush TDs'},
     {key:'careerYPC',           label:'Yards per Carry'},
@@ -791,19 +812,20 @@ var SBS_CATS_RB = [
     {key:'careerRecYards',      label:'Career Rec Yds'},
     {key:'careerReceptions',    label:'Career Receptions'},
     {key:'careerFumbles',       label:'Career Fumbles',   lowerBetter:true},
+    {key:'careerRecYardsRB',    label:'Career Rec Yds (RB)'},
     {key:'seasonHighRushYards', label:'High Season Yds'},
     {key:'seasons',             label:'Seasons Played'},
 ];
 var SBS_CATS_WR = [
-    {key:'careerAV',             label:'Career AV'},
     {key:'careerRecYards',       label:'Career Rec Yds'},
     {key:'careerReceptions',     label:'Career Receptions'},
     {key:'careerRecTDs',         label:'Career Rec TDs'},
     {key:'careerYPR',            label:'Yards per Rec'},
     {key:'seasonHighRecYards',   label:'High Season Yds'},
     {key:'seasonHighReceptions', label:'High Season Recs'},
-    {key:'careerProBowls',       label:'Pro Bowls'},
-    {key:'careerAllPro',         label:'All-Pros'},
+    {key:'careerRushYards',      label:'Career Rush Yds'},
+    {key:'careerFumbles',        label:'Career Fumbles', lowerBetter:true},
+    {key:'careerGamesStarted',   label:'Career Starts'},
     {key:'seasons',              label:'Seasons Played'},
 ];
 var SBS_CATS_TE = SBS_CATS_WR; // TEs share same categories
@@ -847,8 +869,16 @@ function passesGlobal(p) {
         if (p.pos === 'TE') return p.stats.careerReceptions >= 150;
         return true;
     }
-    if (eligibility === 'allStar') return p.av >= 80;
-    if (eligibility === 'hof') return p.av >= 130;
+    if (eligibility === 'allStar') {
+        if (p.pos === 'QB') return p.gs >= 120 || p.stats.careerPassTDs >= 200;
+        if (p.pos === 'RB') return p.gs >= 100 || p.stats.careerRushYards >= 8000;
+        return p.gs >= 100 || p.stats.careerRecYards >= 8000;
+    }
+    if (eligibility === 'hof') {
+        if (p.pos === 'QB') return p.gs >= 180 || p.stats.careerPassTDs >= 300;
+        if (p.pos === 'RB') return p.stats.careerRushYards >= 10000;
+        return p.stats.careerRecYards >= 10000;
+    }
     return true;
 }
 
@@ -877,7 +907,6 @@ function eraPass(p) {
 
 function getStat(p, k) {
     if (k === 'seasons') return p.stats.seasons || p.seasons || 0;
-    if (k === 'careerAV') return p.av || 0;
     return p.stats[k] || 0;
 }
 
@@ -2003,6 +2032,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (dom.eraPopover && !dom.eraPopover.contains(e.target) && e.target !== dom.eraTrigger) {
             dom.eraPopover.classList.add('hidden');
         }
+    });
+
+    // Load CSV data, then show start screen
+    loadAllData(function() {
+        document.getElementById('loading-screen').classList.add('hidden');
+        dom.startScreen.classList.remove('hidden');
     });
 
     dom.startBtn.addEventListener('click', startGame);
