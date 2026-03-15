@@ -833,7 +833,7 @@ var categoryHistory = {};
 var userPickHowMuch = null;
 var sbsPicks        = new Array(10).fill(null);
 var pickEmState     = {threshold:0, correctIDs:new Set(), picksMade:0, totalRoundPts:0, lastVal:null, chainActive:true, chainCount:0, roundOver:false};
-var sliderState     = {min:0, max:0, rangeMax:100, step:1, minLimit:0};
+var sliderState     = {min:0, max:0, rangeMax:100, step:1, minLimit:0, visualMin:0};
 var sliderDragging  = null;
 var dom             = {};
 
@@ -921,54 +921,52 @@ function initSlider(rangeMax, minLimit, step) {
     sliderState.rangeMax = rangeMax;
     sliderState.minLimit = minLimit;
     sliderState.step = step;
+    sliderState.visualMin = deadZoneEnabled ? 0 : minLimit;
     sliderState.min = minLimit;
     sliderState.max = rangeMax;
+
+    if (deadZoneEnabled) {
+        dom.sliderInvalid.style.width = (minLimit / rangeMax * 100) + '%';
+        dom.sliderInvalid.style.display = 'block';
+    } else {
+        dom.sliderInvalid.style.width = '0%';
+        dom.sliderInvalid.style.display = 'none';
+    }
+
     updateSliderUI();
     renderSliderTicks();
 }
 
 function updateSliderUI() {
     if (!dom.thumbMin) return;
-    var span = sliderState.rangeMax;
-    var minPct = (sliderState.min / span) * 100;
-    var maxPct = (sliderState.max / span) * 100;
-    dom.thumbMin.style.left = minPct + '%';
-    dom.thumbMax.style.left = maxPct + '%';
-    dom.fillBar.style.left  = minPct + '%';
-    dom.fillBar.style.width = (maxPct - minPct) + '%';
+    var visualMin = sliderState.visualMin;
+    var span = sliderState.rangeMax - visualMin;
+    var getPct = function(v) { return ((v - visualMin) / span) * 100; };
+    dom.thumbMin.style.left = getPct(sliderState.min) + '%';
+    dom.thumbMax.style.left = getPct(sliderState.max) + '%';
+    dom.fillBar.style.left  = getPct(sliderState.min) + '%';
+    dom.fillBar.style.width = (getPct(sliderState.max) - getPct(sliderState.min)) + '%';
     dom.dispMin.textContent = formatStat(sliderState.min, catKey);
     dom.dispMax.textContent = formatStat(sliderState.max, catKey);
     // Bullseye zone — centered on user's range midpoint, width = rangeMax / 10
     var bullWidth = sliderState.rangeMax / 10;
     var mid = (sliderState.min + sliderState.max) / 2;
-    var bL = Math.max(0, mid - bullWidth / 2);
+    var bL = Math.max(visualMin, mid - bullWidth / 2);
     var bR = Math.min(sliderState.rangeMax, mid + bullWidth / 2);
-    var bLPct = (bL / span) * 100;
-    var bRPct = (bR / span) * 100;
-    dom.bullseye.style.left  = bLPct + '%';
-    dom.bullseye.style.width = (bRPct - bLPct) + '%';
+    dom.bullseye.style.left  = getPct(bL) + '%';
+    dom.bullseye.style.width = (getPct(bR) - getPct(bL)) + '%';
     dom.bullseye.classList.remove('hidden');
     if (useAnimations) dom.bullseye.classList.add('animate-bullseye');
-    // Dead zone
-    if (dom.sliderInvalid) {
-        if (deadZoneEnabled && sliderState.minLimit > 0) {
-            var dzPct = (sliderState.minLimit / sliderState.rangeMax) * 100;
-            dom.sliderInvalid.style.width = dzPct + '%';
-            dom.sliderInvalid.style.display = 'block';
-        } else {
-            dom.sliderInvalid.style.width = '0%';
-            dom.sliderInvalid.style.display = 'none';
-        }
-    }
 }
 
 function renderSliderTicks() {
-    var span = sliderState.rangeMax, step = sliderState.step;
+    var visualMin = sliderState.visualMin;
+    var span = sliderState.rangeMax - visualMin;
     var numTicks = 5;
     dom.ticks.innerHTML = '';
     for (var i = 0; i <= numTicks; i++) {
-        var val = (span / numTicks) * i;
-        var pct = (val / span) * 100;
+        var val = visualMin + (span * (i / numTicks));
+        var pct = (i / numTicks) * 100;
         var tick = document.createElement('div');
         tick.style.cssText = 'position:absolute;left:' + pct + '%;transform:translateX(-50%);font-size:0.6rem;font-weight:600;color:#9ca3af;';
         tick.textContent = formatStat(val, catKey);
@@ -1000,7 +998,9 @@ function setupSliderDrag() {
         e.preventDefault();
         var rect = area.getBoundingClientRect();
         var pct = Math.max(0, Math.min(1, (getX(e) - rect.left) / rect.width));
-        var val = pct * sliderState.rangeMax;
+        var visualMin = sliderState.visualMin;
+        var span = sliderState.rangeMax - visualMin;
+        var val = visualMin + (pct * span);
         var step = sliderState.step;
         val = Math.round(val / step) * step;
         if (sliderDragging === 'min') {
@@ -1183,18 +1183,20 @@ function shuffle(arr) {
 // SCORING
 // ═══════════════════════════════════════
 function calcHowMuchScore(diff, min, max) {
-    if (diff < min || diff > max) return 0;
-    var curCat = BASE_CATS[catKey];
-    var rangeMax = curCat.dMin * 5;
-    var scoringSpan = rangeMax - curCat.dMin;
-    var rangeWidth = max - min;
-    var safeSpan = scoringSpan > 0 ? scoringSpan : 1;
-    var norm = Math.max(0, Math.min(1, (safeSpan - rangeWidth) / safeSpan));
-    var rangePts = Math.round(800 * Math.pow(norm, 2));
-    var bw = rangeMax / 10;
-    var mid = (min + max) / 2, eps = 1e-5;
-    var bullPts = (diff >= mid - bw / 2 - eps && diff <= mid + bw / 2 + eps) ? 100 : 0;
-    return Math.min(1000, Math.max(0, 200 + rangePts + bullPts));
+    var pts = 200; // always get 200 for correct player
+    if (diff >= min && diff <= max) {
+        var curCat = BASE_CATS[catKey];
+        var rangeMax = curCat.dMin * 5;
+        var scoringSpan = rangeMax - curCat.dMin;
+        var rangeWidth = max - min;
+        var safeSpan = scoringSpan > 0 ? scoringSpan : 1;
+        var norm = Math.max(0, Math.min(1, (safeSpan - rangeWidth) / safeSpan));
+        pts += Math.round(800 * Math.pow(norm, 2));
+        var bw = rangeMax / 10;
+        var mid = (min + max) / 2, eps = 1e-5;
+        if (diff >= mid - bw / 2 - eps && diff <= mid + bw / 2 + eps) pts += 100;
+    }
+    return Math.min(1000, Math.max(0, pts));
 }
 
 // ═══════════════════════════════════════
@@ -1329,7 +1331,7 @@ function lockInHowMuch() {
     var playerCorrect = userPickHowMuch === correctPick;
     var rangeCorrect = playerCorrect && (diff >= sliderState.min && diff <= sliderState.max);
     var pts = playerCorrect ? calcHowMuchScore(diff, sliderState.min, sliderState.max) : 0;
-    var pinPct = Math.min(100, (diff / sliderState.rangeMax) * 100);
+    var pinPct = Math.min(100, ((diff - sliderState.visualMin) / (sliderState.rangeMax - sliderState.visualMin)) * 100);
     var diffText = formatStat(diff, catKey);
 
     // Determine bullseye
@@ -1482,23 +1484,37 @@ function lockInHowMuch() {
     }, 1000);
 }
 
+function animateValue(obj, start, end, duration, crossedThreshold) {
+    if (!useAnimations || start === end) {
+        obj.textContent = end;
+        updateScoreColor();
+        return;
+    }
+    var startTimestamp = null;
+    function step(timestamp) {
+        if (!startTimestamp) startTimestamp = timestamp;
+        var progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        obj.textContent = Math.floor(progress * (end - start) + start);
+        if (progress < 1) {
+            window.requestAnimationFrame(step);
+        } else {
+            obj.textContent = end;
+            updateScoreColor();
+            if (crossedThreshold) {
+                obj.classList.add('animate-score-levelup');
+                setTimeout(function() { obj.classList.remove('animate-score-levelup'); }, 1200);
+            }
+        }
+    }
+    window.requestAnimationFrame(step);
+}
+
 function finishRound(pts) {
     var prevScore = score;
     score += pts;
-    dom.scoreDisp.textContent = score;
-    updateScoreColor();
     var medals = [2000, 3000, 4000, 5000];
     var crossedMedal = medals.some(function(m) { return prevScore < m && score >= m; });
-    if (useAnimations) {
-        if (crossedMedal) {
-            dom.scoreDisp.classList.add('animate-score-levelup');
-            setTimeout(function() { dom.scoreDisp.classList.remove('animate-score-levelup'); }, 1200);
-        } else {
-            dom.scoreDisp.classList.add('animate-score-pop');
-            setTimeout(function() { dom.scoreDisp.classList.remove('animate-score-pop'); }, 400);
-        }
-    }
-    showAlert(pts > 0 ? '+' + pts + ' pts!' : 'No points', pts > 0 ? 'bg-green-600' : 'bg-red-500');
+    animateValue(dom.scoreDisp, prevScore, score, 1000, crossedMedal);
     dom.submitBtn.textContent = round >= 10 ? 'Finish Game' : 'Next Round';
     dom.submitBtn.disabled = false;
     dom.rerollBtn.disabled = true;
@@ -1575,19 +1591,9 @@ function lockInShowdown() {
     roundResults.push({round:round, pts:pts, cat:'Showdown', pA:A.name, pB:B.name, correct:correct + '/' + cats.length});
     var prevScoreSbs = score;
     score += pts;
-    dom.scoreDisp.textContent = score;
-    updateScoreColor();
     var medalsSbs = [2000, 3000, 4000, 5000];
     var crossedMedalSbs = medalsSbs.some(function(m) { return prevScoreSbs < m && score >= m; });
-    if (useAnimations) {
-        if (crossedMedalSbs) {
-            dom.scoreDisp.classList.add('animate-score-levelup');
-            setTimeout(function() { dom.scoreDisp.classList.remove('animate-score-levelup'); }, 1200);
-        } else {
-            dom.scoreDisp.classList.add('animate-score-pop');
-            setTimeout(function() { dom.scoreDisp.classList.remove('animate-score-pop'); }, 400);
-        }
-    }
+    animateValue(dom.scoreDisp, prevScoreSbs, score, 1000, crossedMedalSbs);
     showAlert('+' + pts + ' pts (' + correct + '/' + cats.length + ')','bg-green-600');
     dom.sbsSubmitBtn.textContent = round >= 10 ? 'Finish Game' : 'Next Round';
     dom.sbsSubmitBtn.disabled = false;
@@ -1672,9 +1678,11 @@ function endPickEmRound(wasCorrect) {
         else c.classList.add('incorrect');
     });
     roundResults.push({round:round, pts:pickEmState.totalRoundPts, cat:BASE_CATS[catKey].label, correct:wasCorrect});
+    var prevScorePE = score;
     score += pickEmState.totalRoundPts;
-    dom.scoreDisp.textContent = score;
-    updateScoreColor();
+    var medalsPE = [2000, 3000, 4000, 5000];
+    var crossedMedalPE = medalsPE.some(function(m) { return prevScorePE < m && score >= m; });
+    animateValue(dom.scoreDisp, prevScorePE, score, 1000, crossedMedalPE);
     if (!wasCorrect) showAlert('Wrong! Round over','bg-red-500');
     else showAlert('+' + pickEmState.totalRoundPts + ' pts','bg-green-600');
     dom.pickemSubmitBtn.textContent = round >= 10 ? 'Finish Game' : 'Next Round';
@@ -2129,8 +2137,8 @@ function toggleDeadZone() {
         if (dom.submitBtn.textContent !== 'Lock In') {
             dom.thumbMin.style.display = 'none';
             dom.thumbMax.style.display = 'none';
-            var span = sliderState.rangeMax;
-            var pinPct = Math.max(0, Math.min(100, (trueDiff / span) * 100));
+            var span = sliderState.rangeMax - sliderState.visualMin;
+            var pinPct = Math.max(0, Math.min(100, ((trueDiff - sliderState.visualMin) / span) * 100));
             dom.pin.style.left = pinPct + '%';
         }
     } else {
