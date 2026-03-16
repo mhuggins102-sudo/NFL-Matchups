@@ -693,6 +693,8 @@ function buildPlayers(people, stats, legends) {
             pos: pos,
             gs: parseInt(row.games) || 0,
             decades: new Set(decades),
+            rookieYear: parseInt(row.rookieYear) || 0,
+            isLegend: false,
             stats: {}
         };
         STAT_KEYS.forEach(function(k) { p.stats[k] = parseFloat(s[k]) || 0; });
@@ -722,6 +724,8 @@ function buildPlayers(people, stats, legends) {
             pos: pos,
             gs: parseInt(row.games) || 0,
             decades: new Set(decades),
+            rookieYear: 0,
+            isLegend: true,
             stats: {}
         };
         var s = legendStats[pid];
@@ -924,12 +928,12 @@ function eraPass(p) {
     return true;
 }
 
-// Showdown requires season-high stats; exclude players with incomplete data
-function hasSeasonHighs(p) {
-    if (p.pos === 'QB') return (p.stats.seasonHighPassYards || 0) > 0;
-    if (p.pos === 'RB') return (p.stats.seasonHighRushYards || 0) > 0;
-    // WR / TE
-    return (p.stats.seasonHighRecYards || 0) > 0;
+// Showdown requires complete season-high stats.
+// Legends have hand-curated season highs covering their full career.
+// Non-legends need rookieYear >= 1999 so all seasons are in the data.
+function hasCompleteSeasonData(p) {
+    if (p.isLegend) return true;
+    return p.rookieYear >= 1999;
 }
 
 function getStat(p, k) {
@@ -1186,8 +1190,9 @@ function generateHowMuch() {
     for (var attempt = 0; attempt < 300; attempt++) {
         var ck = validCats[Math.floor(Math.random() * validCats.length)];
         var catDef = BASE_CATS[ck];
+        var needsSeason = ck.indexOf('seasonHigh') === 0;
         var pool = NFL_PLAYERS.filter(function(p) {
-            return !usedPlayerIDs.has(p.id) && passesGlobal(p) && poolPass(p) && eraPass(p) && posPass(p, catDef.type) && playerMeetsCatMinimum(p, ck);
+            return !usedPlayerIDs.has(p.id) && passesGlobal(p) && poolPass(p) && eraPass(p) && posPass(p, catDef.type) && playerMeetsCatMinimum(p, ck) && (!needsSeason || hasCompleteSeasonData(p));
         });
         if (pool.length < 2) continue;
         for (var j = 0; j < 50; j++) {
@@ -1225,11 +1230,11 @@ function generateShowdown() {
     var posType = pickPositionType();
     var realPos = posType === 'skill' ? (Math.random() < 0.5 ? 'WR' : 'TE') : posType;
     var pool = NFL_PLAYERS.filter(function(p) {
-        return !usedPlayerIDs.has(p.id) && passesGlobal(p) && poolPass(p) && eraPass(p) && p.pos === realPos && hasSeasonHighs(p);
+        return !usedPlayerIDs.has(p.id) && passesGlobal(p) && poolPass(p) && eraPass(p) && p.pos === realPos && hasCompleteSeasonData(p);
     });
     if (pool.length < 2) {
         // fallback: relax usedIDs
-        pool = NFL_PLAYERS.filter(function(p) { return passesGlobal(p) && poolPass(p) && eraPass(p) && p.pos === realPos && hasSeasonHighs(p); });
+        pool = NFL_PLAYERS.filter(function(p) { return passesGlobal(p) && poolPass(p) && eraPass(p) && p.pos === realPos && hasCompleteSeasonData(p); });
     }
     if (pool.length < 2) return null;
     var cats = realPos === 'QB' ? SBS_CATS_QB : (realPos === 'RB' ? SBS_CATS_RB : SBS_CATS_WR);
@@ -1293,7 +1298,8 @@ function generatePickEm() {
             badMax = threshVal - 0.001; badMin = Math.max(0, threshVal - buffer);
         }
 
-        var eligPool = NFL_PLAYERS.filter(function(p) { return passesGlobal(p) && eraPass(p) && poolPass(p) && posPass(p, cc.type); });
+        var needsSeason = ck.indexOf('seasonHigh') === 0;
+        var eligPool = NFL_PLAYERS.filter(function(p) { return passesGlobal(p) && eraPass(p) && poolPass(p) && posPass(p, cc.type) && (!needsSeason || hasCompleteSeasonData(p)); });
         var correctPool = [], distractorPool = [];
         eligPool.forEach(function(p) {
             var val = getStat(p, ck);
