@@ -197,7 +197,21 @@ def main():
                 if stat not in sh or val > sh[stat]:
                     sh[stat] = val
 
-    print(f"\r  Downloaded stats 1999-2025. Players in weekly data: {len(weekly_players)}    ")
+    max_weekly_year = END_YEAR
+    # Detect actual last year with data (2025 weekly may not exist yet)
+    for y in range(END_YEAR, START_YEAR - 1, -1):
+        url_check = PLAYER_STATS_URL.format(year=y)
+        try:
+            r = requests.head(url_check, timeout=10, allow_redirects=True)
+            if r.status_code == 200:
+                max_weekly_year = y
+                break
+        except requests.RequestException:
+            continue
+    print(f"\r  Downloaded weekly stats 1999-{max_weekly_year}. Players in weekly data: {len(weekly_players)}    ")
+    if max_weekly_year < END_YEAR:
+        print(f"  NOTE: Weekly stats for {max_weekly_year+1}-{END_YEAR} not yet available.")
+        print(f"        Implied season highs will be derived from career totals minus weekly totals.")
 
     # ═══════════════════════════════════════════════════════════════════════
     # Stage 3: Merge — draft_picks as primary, supplemented by player_stats
@@ -263,6 +277,23 @@ def main():
             fumbles = wp["rushing_fumbles"] + wp["receiving_fumbles"]
             sh = season_highs.get(gsis_id, {})
             seen_gsis.add(gsis_id)
+
+            # ── Implied 2025 season: career totals (draft_picks) minus
+            #    sum of weekly seasons (1999-2024).  If positive, the
+            #    remainder is the player's 2025 output.  Compare against
+            #    existing season highs and upgrade if larger.
+            implied = {
+                "passing_yards": pass_yds - wp["passing_yards"],
+                "passing_tds":   pass_tds - wp["passing_tds"],
+                "rushing_yards": rush_yds - wp["rushing_yards"],
+                "rushing_tds":   rush_tds - wp["rushing_tds"],
+                "receptions":    receptions - wp["receptions"],
+                "receiving_yards": rec_yds - wp["receiving_yards"],
+                "receiving_tds": rec_tds - wp["receiving_tds"],
+            }
+            for stat, val in implied.items():
+                if val > 0 and val > sh.get(stat, 0):
+                    sh[stat] = val
 
         # Derived stats
         comp_pct = round(completions / pass_att, 3) if pass_att > 0 else 0
