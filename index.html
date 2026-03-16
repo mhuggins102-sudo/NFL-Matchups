@@ -47,6 +47,11 @@
         .animate-score-levelup { animation: score-pop-multi 1.2s ease-in-out; }
         @keyframes float-up { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, -4px); } }
         .animate-float-result { animation: float-up 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes poof { 0%{opacity:1;transform:scale(1);}50%{opacity:0.5;transform:scale(1.3);}100%{opacity:0;transform:scale(0);} }
+        .animate-poof { animation: poof 0.35s ease-out forwards; }
+        @keyframes poof-in { 0%{opacity:0;transform:scale(0);}50%{opacity:0.5;transform:scale(1.2);}100%{opacity:1;transform:scale(1);} }
+        .animate-poof-in { animation: poof-in 0.35s ease-out forwards; }
+        .bomb-armed { box-shadow: 0 0 0 3px rgba(245,158,11,0.6); }
         .score-bronze { color: var(--color-bronze); }
         .score-silver { color: var(--color-silver); }
         .score-gold { color: var(--color-gold); }
@@ -126,6 +131,9 @@
     <div class="flex items-center gap-2 relative">
         <button id="reroll-btn" class="p-2 rounded-full transition hidden disabled:cursor-not-allowed disabled:opacity-60 text-emerald-600 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400" aria-label="Skip Question">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="M16 8h.01"/><path d="M8 8h.01"/><path d="M8 16h.01"/><path d="M16 16h.01"/><path d="M12 12h.01"/></svg>
+        </button>
+        <button id="bomb-btn" class="p-2 rounded-full transition hidden disabled:cursor-not-allowed disabled:opacity-60 text-emerald-600 bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 relative" aria-label="Replace Player">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="13" r="9"/><path d="M14.35 7.65 16.3 5.7a1 1 0 0 1 1.4 0l.6.6a1 1 0 0 1 0 1.4l-1.95 1.95"/><path d="M22 2 20 4"/><path d="m20 2 2 2"/></svg>
         </button>
         <button id="settings-btn" class="p-2 rounded-full hover:bg-gray-300 dark:hover:bg-gray-800 transition text-gray-600 dark:text-gray-400">
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -830,7 +838,7 @@ var SBS_CATS_RB = [
     {key:'careerYPC',           label:'Yards per Carry'},
     {key:'careerRushAttempts',  label:'Career Attempts'},
     {key:'careerRecYards',      label:'Career Rec Yds'},
-    {key:'careerReceptions',    label:'Career Receptions'},
+    {key:'careerReceptions',    label:'Career Rec'},
     {key:'careerFumbles',       label:'Career Fumbles',   lowerBetter:true},
     {key:'careerTotalTDs',      label:'Career Total TDs'},
     {key:'careerGamesStarted',  label:'Career Games'},
@@ -838,7 +846,7 @@ var SBS_CATS_RB = [
 ];
 var SBS_CATS_WR = [
     {key:'careerRecYards',       label:'Career Rec Yds'},
-    {key:'careerReceptions',     label:'Career Receptions'},
+    {key:'careerReceptions',     label:'Career Rec'},
     {key:'careerRecTDs',         label:'Career Rec TDs'},
     {key:'careerYPR',            label:'Yards per Rec'},
     {key:'careerTargets',        label:'Career Targets'},
@@ -868,6 +876,9 @@ var catKey          = null;
 var trueDiff        = 0;
 var correctPick     = null;
 var hasUsedReroll   = false;
+var hasUsedBomb     = false;
+var bombArmed       = false;
+var bombReplacesLeft = 0;
 var usedPlayerIDs   = new Set();
 var categoryHistory = {};
 var userPickHowMuch = null;
@@ -1155,6 +1166,8 @@ var STAT_MINIMUMS = {
 };
 
 function playerMeetsCatMinimum(p, catKey) {
+    // Legends have incomplete data; exclude if stat is 0
+    if (p.isLegend && getStat(p, catKey) === 0) return false;
     var min = STAT_MINIMUMS[catKey];
     if (min === undefined) return true;
     return getStat(p, catKey) >= min;
@@ -1230,11 +1243,11 @@ function generateShowdown() {
     var posType = pickPositionType();
     var realPos = posType === 'skill' ? (Math.random() < 0.5 ? 'WR' : 'TE') : posType;
     var pool = NFL_PLAYERS.filter(function(p) {
-        return !usedPlayerIDs.has(p.id) && passesGlobal(p) && poolPass(p) && eraPass(p) && p.pos === realPos && hasCompleteSeasonData(p);
+        return !usedPlayerIDs.has(p.id) && !p.isLegend && passesGlobal(p) && poolPass(p) && eraPass(p) && p.pos === realPos && hasCompleteSeasonData(p);
     });
     if (pool.length < 2) {
         // fallback: relax usedIDs
-        pool = NFL_PLAYERS.filter(function(p) { return passesGlobal(p) && poolPass(p) && eraPass(p) && p.pos === realPos && hasCompleteSeasonData(p); });
+        pool = NFL_PLAYERS.filter(function(p) { return !p.isLegend && passesGlobal(p) && poolPass(p) && eraPass(p) && p.pos === realPos && hasCompleteSeasonData(p); });
     }
     if (pool.length < 2) return null;
     var cats = realPos === 'QB' ? SBS_CATS_QB : (realPos === 'RB' ? SBS_CATS_RB : SBS_CATS_WR);
@@ -1367,8 +1380,8 @@ function startRound() {
         dom.catLabel.textContent = eligLabel + ' \u00b7 ' + posLabel;
         dom.nameA.textContent = A.name;
         dom.nameB.textContent = B.name;
-        dom.statA.textContent = '--'; dom.statA.classList.add('hidden');
-        dom.statB.textContent = '--'; dom.statB.classList.add('hidden');
+        dom.statA.textContent = '--'; dom.statA.className = 'stat-reveal mt-1 text-xs font-semibold hidden text-gray-600 dark:text-gray-300';
+        dom.statB.textContent = '--'; dom.statB.className = 'stat-reveal mt-1 text-xs font-semibold hidden text-gray-600 dark:text-gray-300';
         var baseCardClass = 'player-card group relative flex flex-col items-center justify-center p-2 h-16 bg-white dark:bg-gray-800 rounded-2xl border-2 border-gray-300 dark:border-transparent shadow-sm transition-all duration-200 active:scale-[0.98]';
         dom.cardA.className = baseCardClass;
         dom.cardB.className = baseCardClass;
@@ -1398,6 +1411,8 @@ function startRound() {
         dom.catLabel.textContent = eligLabel + ' \u00b7 ' + posLabelSbs;
         dom.sbsNameA.textContent = A.name;
         dom.sbsNameB.textContent = B.name;
+        dom.sbsNameA.onclick = function() { if (bombArmed) bombReplaceShowdown('A'); };
+        dom.sbsNameB.onclick = function() { if (bombArmed) bombReplaceShowdown('B'); };
         if (dom.sbsFeedback) dom.sbsFeedback.innerHTML = '';
         sbsPicks = new Array(cats.length).fill(null);
         renderShowdownGrid(cats);
@@ -1444,6 +1459,7 @@ function showUI(mode) {
     dom.uiPickem.classList.add('hidden');
     dom.homeBtn.classList.remove('hidden');
     dom.rerollBtn.classList.remove('hidden');
+    dom.bombBtn.classList.remove('hidden');
     if (hasUsedReroll) {
         dom.rerollBtn.classList.remove('text-emerald-600','bg-emerald-100','hover:bg-emerald-200','dark:bg-emerald-900/30','dark:text-emerald-400');
         dom.rerollBtn.classList.add('text-red-400','bg-red-100','dark:bg-red-900/20','dark:text-red-500','cursor-not-allowed','opacity-60');
@@ -1452,6 +1468,15 @@ function showUI(mode) {
         dom.rerollBtn.classList.remove('text-red-400','bg-red-100','dark:bg-red-900/20','dark:text-red-500','cursor-not-allowed','opacity-60','opacity-50');
         dom.rerollBtn.classList.add('text-emerald-600','bg-emerald-100','hover:bg-emerald-200','dark:bg-emerald-900/30','dark:text-emerald-400');
         dom.rerollBtn.disabled = false;
+    }
+    if (hasUsedBomb) {
+        dom.bombBtn.classList.remove('text-emerald-600','bg-emerald-100','hover:bg-emerald-200','dark:bg-emerald-900/30','dark:text-emerald-400');
+        dom.bombBtn.classList.add('text-red-400','bg-red-100','dark:bg-red-900/20','dark:text-red-500','cursor-not-allowed','opacity-60');
+        dom.bombBtn.disabled = true;
+    } else {
+        dom.bombBtn.classList.remove('text-red-400','bg-red-100','dark:bg-red-900/20','dark:text-red-500','cursor-not-allowed','opacity-60','opacity-50','bomb-armed');
+        dom.bombBtn.classList.add('text-emerald-600','bg-emerald-100','hover:bg-emerald-200','dark:bg-emerald-900/30','dark:text-emerald-400');
+        dom.bombBtn.disabled = false;
     }
     dom.startScreen.classList.add('hidden');
     dom.gameScreen.classList.remove('hidden');
@@ -1464,6 +1489,7 @@ function showUI(mode) {
 
 function onCardClick(which) {
     if (dom.submitBtn.textContent !== 'Lock In') return; // already locked in
+    if (bombArmed) { bombReplaceHowMuch(which); return; }
     userPickHowMuch = which;
     // Clear previous selection from both cards
     [dom.cardA, dom.cardB].forEach(function(c) {
@@ -1473,6 +1499,17 @@ function onCardClick(which) {
     var selectedCard = which === 'A' ? dom.cardA : dom.cardB;
     selectedCard.classList.add('ring-4','ring-green-500');
     dom.submitBtn.disabled = false;
+    // Dim die and bomb after first pick
+    if (!hasUsedReroll) {
+        dom.rerollBtn.classList.remove('hover:bg-emerald-200');
+        dom.rerollBtn.classList.add('opacity-50','cursor-not-allowed');
+        dom.rerollBtn.disabled = true;
+    }
+    if (!hasUsedBomb) {
+        dom.bombBtn.classList.remove('hover:bg-emerald-200');
+        dom.bombBtn.classList.add('opacity-50','cursor-not-allowed');
+        dom.bombBtn.disabled = true;
+    }
 }
 
 function lockInHowMuch() {
@@ -1483,6 +1520,7 @@ function lockInHowMuch() {
     }
     dom.submitBtn.disabled = true;
     dom.rerollBtn.disabled = true;
+    dom.bombBtn.disabled = true;
     dom.thumbMin.style.display = 'none';
     dom.thumbMax.style.display = 'none';
 
@@ -1536,11 +1574,20 @@ function lockInHowMuch() {
 
     dom.feedback.innerHTML = '';
 
+    function styleStatReveal(statEl, isWinner) {
+        statEl.classList.remove('hidden','text-gray-600','dark:text-gray-300');
+        if (isWinner) {
+            statEl.classList.add('text-green-700','dark:text-green-300','bg-green-200','dark:bg-green-800/50','rounded','px-2','py-0.5','font-black');
+        } else {
+            statEl.classList.add('text-red-600','dark:text-red-300','bg-red-200','dark:bg-red-800/50','rounded','px-2','py-0.5');
+        }
+    }
+
     // ── INSTANT MODE (animations off) ──
     if (!useAnimations) {
         setCardStyles();
-        dom.statA.textContent = formatStat(sA, catKey); dom.statA.classList.remove('hidden','text-gray-600','dark:text-gray-300');
-        dom.statB.textContent = formatStat(sB, catKey); dom.statB.classList.remove('hidden','text-gray-600','dark:text-gray-300');
+        dom.statA.textContent = formatStat(sA, catKey); styleStatReveal(dom.statA, correctPick === 'A');
+        dom.statB.textContent = formatStat(sB, catKey); styleStatReveal(dom.statB, correctPick === 'B');
         showPinAndResults(false);
         dom.pin.style.transition = 'none';
         dom.pin.style.left = pinPct + '%';
@@ -1567,8 +1614,8 @@ function lockInHowMuch() {
     // Wrong player — quick reveal
     if (!playerCorrect) {
         setCardStyles();
-        dom.statA.textContent = formatStat(sA, catKey); dom.statA.classList.remove('hidden','text-gray-600','dark:text-gray-300');
-        dom.statB.textContent = formatStat(sB, catKey); dom.statB.classList.remove('hidden','text-gray-600','dark:text-gray-300');
+        dom.statA.textContent = formatStat(sA, catKey); styleStatReveal(dom.statA, correctPick === 'A');
+        dom.statB.textContent = formatStat(sB, catKey); styleStatReveal(dom.statB, correctPick === 'B');
         showPinAndResults(false);
         dom.pin.style.transition = 'none';
         dom.pin.style.left = pinPct + '%';
@@ -1588,7 +1635,7 @@ function lockInHowMuch() {
     loserCard.classList.remove('ring-4','ring-green-500','bg-green-50','dark:bg-green-900/20','border-gray-300','dark:border-transparent');
     loserCard.classList.add('opacity-50','bg-gray-100','dark:bg-gray-800','border-transparent');
     winnerStat.textContent = formatStat(winnerVal, catKey);
-    winnerStat.classList.remove('hidden','text-gray-600','dark:text-gray-300');
+    styleStatReveal(winnerStat, true);
 
     // Stage 1 (500ms): "Correct Player +200"
     setTimeout(function() {
@@ -1621,7 +1668,7 @@ function lockInHowMuch() {
             dom.resultText.textContent = diffText;
             dom.resultText.className = 'absolute bottom-full left-1/2 transform -translate-x-1/2 mb-0 text-sm font-black whitespace-nowrap bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 opacity-0 ' + txtClr + ' animate-float-result';
             loserStat.textContent = formatStat(loserVal, catKey);
-            loserStat.classList.remove('hidden','text-gray-600','dark:text-gray-300');
+            styleStatReveal(loserStat, false);
             showPinAndResults(true);
 
             if (rangeCorrect) {
@@ -1681,6 +1728,7 @@ function finishRound(pts) {
     dom.submitBtn.textContent = round >= 10 ? 'Finish Game' : 'Next Round';
     dom.submitBtn.disabled = false;
     dom.rerollBtn.disabled = true;
+    dom.bombBtn.disabled = true;
 }
 
 function renderShowdownGrid(cats) {
@@ -1731,6 +1779,17 @@ function onSBSCellClick(idx, which, cats) {
     pickedCell.classList.add('selected');
     var allPicked = sbsPicks.slice(0, cats.length).every(function(p) { return p !== null; });
     dom.sbsSubmitBtn.disabled = !allPicked;
+    // Dim die and bomb after first Showdown pick
+    if (!hasUsedReroll) {
+        dom.rerollBtn.classList.remove('hover:bg-emerald-200');
+        dom.rerollBtn.classList.add('opacity-50','cursor-not-allowed');
+        dom.rerollBtn.disabled = true;
+    }
+    if (!hasUsedBomb) {
+        dom.bombBtn.classList.remove('hover:bg-emerald-200');
+        dom.bombBtn.classList.add('opacity-50','cursor-not-allowed');
+        dom.bombBtn.disabled = true;
+    }
 }
 
 function lockInShowdown() {
@@ -1741,6 +1800,7 @@ function lockInShowdown() {
     }
     dom.sbsSubmitBtn.disabled = true;
     dom.rerollBtn.disabled = true;
+    dom.bombBtn.disabled = true;
     dom.sbsSubmitBtn.textContent = 'Revealing...';
 
     var realPos = A.pos;
@@ -1802,6 +1862,7 @@ function lockInShowdown() {
 function onPickEmCardClick(card, player, val) {
     if (pickEmState.roundOver) return;
     if (card.classList.contains('revealed')) return;
+    if (bombArmed) { bombReplacePickEm(card, player); return; }
     var isCorrect = pickEmState.correctIDs.has(player.id);
     if (isCorrect) {
         card.classList.add('revealed', 'correct', 'border-2');
@@ -1810,11 +1871,18 @@ function onPickEmCardClick(card, player, val) {
         card.querySelector('.base-pts-tag').classList.remove('hidden');
         if (useAnimations) card.querySelector('.base-pts-tag').classList.add('animate-text-pop');
         pickEmState.picksMade++;
-        // Dim skip die after first pick
-        if (pickEmState.picksMade === 1 && !hasUsedReroll) {
-            dom.rerollBtn.classList.remove('hover:bg-emerald-200');
-            dom.rerollBtn.classList.add('opacity-50','cursor-not-allowed');
-            dom.rerollBtn.disabled = true;
+        // Dim skip die and bomb after first pick
+        if (pickEmState.picksMade === 1) {
+            if (!hasUsedReroll) {
+                dom.rerollBtn.classList.remove('hover:bg-emerald-200');
+                dom.rerollBtn.classList.add('opacity-50','cursor-not-allowed');
+                dom.rerollBtn.disabled = true;
+            }
+            if (!hasUsedBomb) {
+                dom.bombBtn.classList.remove('hover:bg-emerald-200');
+                dom.bombBtn.classList.add('opacity-50','cursor-not-allowed');
+                dom.bombBtn.disabled = true;
+            }
         }
         var pts = 100;
         // Chain logic: require picks ordered from farthest to closest to threshold
@@ -1904,6 +1972,7 @@ function endPickEmRound(wasCorrect) {
         dom.pickemSubmitBtn.textContent = round >= 10 ? 'Finish Game' : 'Next Round';
         dom.pickemSubmitBtn.disabled = false;
         dom.rerollBtn.disabled = true;
+        dom.bombBtn.disabled = true;
     };
 
     if (!useAnimations) {
@@ -1956,6 +2025,7 @@ function skipQuestion() {
     if (gameMode === 'pickEm' && pickEmState.picksMade > 0) return;
 
     hasUsedReroll = true;
+    disarmBomb(); // cancel bomb if armed
 
     // Turn red
     dom.rerollBtn.classList.remove('text-emerald-600','bg-emerald-100','hover:bg-emerald-200','dark:bg-emerald-900/30','dark:text-emerald-400');
@@ -1966,10 +2036,168 @@ function skipQuestion() {
     startRound();
 }
 
+function armBomb() {
+    if (hasUsedBomb || bombArmed) return;
+    // Only allow before any interaction
+    if (gameMode === 'howMuch' && dom.submitBtn.textContent !== 'Lock In') return;
+    if (gameMode === 'howMuch' && userPickHowMuch !== null) return;
+    if (gameMode === 'sideBySide' && dom.sbsSubmitBtn.textContent !== 'Lock In') return;
+    if (gameMode === 'sideBySide' && sbsPicks.some(function(p) { return p !== null; })) return;
+    if (gameMode === 'pickEm' && pickEmState.roundOver) return;
+    if (gameMode === 'pickEm' && pickEmState.picksMade > 0) return;
+
+    bombArmed = true;
+    bombReplacesLeft = gameMode === 'pickEm' ? 3 : 1;
+    dom.bombBtn.classList.add('bomb-armed');
+    // Highlight targetable names
+    if (gameMode === 'sideBySide') {
+        dom.sbsNameA.style.cursor = 'pointer';
+        dom.sbsNameB.style.cursor = 'pointer';
+    }
+    var msg = bombReplacesLeft > 1 ? 'Pick ' + bombReplacesLeft + ' players to replace' : 'Pick a player to replace';
+    showAlert(msg, 'bg-amber-600');
+}
+
+function disarmBomb() {
+    bombArmed = false;
+    bombReplacesLeft = 0;
+    dom.bombBtn.classList.remove('bomb-armed');
+    if (dom.sbsNameA) dom.sbsNameA.style.cursor = '';
+    if (dom.sbsNameB) dom.sbsNameB.style.cursor = '';
+}
+
+function finalizeBomb() {
+    hasUsedBomb = true;
+    disarmBomb();
+    // Turn red/used
+    dom.bombBtn.classList.remove('text-emerald-600','bg-emerald-100','hover:bg-emerald-200','dark:bg-emerald-900/30','dark:text-emerald-400');
+    dom.bombBtn.classList.add('text-red-400','bg-red-100','dark:bg-red-900/20','dark:text-red-500','cursor-not-allowed','opacity-60');
+    dom.bombBtn.disabled = true;
+}
+
+function findReplacementPlayer(excludeIDs, pos, catKeyFilter) {
+    var pool = NFL_PLAYERS.filter(function(p) {
+        if (excludeIDs.has(p.id)) return false;
+        if (!passesGlobal(p)) return false;
+        if (!poolPass(p)) return false;
+        if (!eraPass(p)) return false;
+        if (pos && p.pos !== pos) return false;
+        if (catKeyFilter && !playerMeetsCatMinimum(p, catKeyFilter)) return false;
+        if (gameMode === 'sideBySide' && (p.isLegend || !hasCompleteSeasonData(p))) return false;
+        var needsSeason = catKeyFilter && catKeyFilter.indexOf('seasonHigh') === 0;
+        if (needsSeason && !hasCompleteSeasonData(p)) return false;
+        return true;
+    });
+    if (pool.length === 0) return null;
+    return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function bombReplaceHowMuch(which) {
+    if (!bombArmed || bombReplacesLeft <= 0) return;
+    var oldPlayer = which === 'A' ? A : B;
+    var exclude = new Set(usedPlayerIDs);
+    exclude.add(A.id); exclude.add(B.id);
+    var replacement = findReplacementPlayer(exclude, null, catKey);
+    if (!replacement) { showAlert('No replacement available', 'bg-red-500'); disarmBomb(); return; }
+    usedPlayerIDs.add(replacement.id);
+    var nameEl = which === 'A' ? dom.nameA : dom.nameB;
+    nameEl.classList.add('animate-poof');
+    setTimeout(function() {
+        if (which === 'A') A = replacement; else B = replacement;
+        nameEl.textContent = replacement.name;
+        nameEl.classList.remove('animate-poof');
+        nameEl.classList.add('animate-poof-in');
+        setTimeout(function() { nameEl.classList.remove('animate-poof-in'); }, 350);
+        // Recalculate
+        trueDiff = Math.abs(getStat(A, catKey) - getStat(B, catKey));
+        bombReplacesLeft--;
+        if (bombReplacesLeft <= 0) finalizeBomb();
+    }, 350);
+}
+
+function bombReplaceShowdown(which) {
+    if (!bombArmed || bombReplacesLeft <= 0) return;
+    var exclude = new Set(usedPlayerIDs);
+    exclude.add(A.id); exclude.add(B.id);
+    var replacement = findReplacementPlayer(exclude, A.pos, null);
+    if (!replacement) { showAlert('No replacement available', 'bg-red-500'); disarmBomb(); return; }
+    usedPlayerIDs.add(replacement.id);
+    var nameEl = which === 'A' ? dom.sbsNameA : dom.sbsNameB;
+    nameEl.classList.add('animate-poof');
+    setTimeout(function() {
+        if (which === 'A') A = replacement; else B = replacement;
+        nameEl.textContent = replacement.name;
+        nameEl.classList.remove('animate-poof');
+        nameEl.classList.add('animate-poof-in');
+        setTimeout(function() { nameEl.classList.remove('animate-poof-in'); }, 350);
+        // Re-render grid
+        var cats = A.pos === 'QB' ? SBS_CATS_QB : (A.pos === 'RB' ? SBS_CATS_RB : SBS_CATS_WR);
+        sbsPicks = new Array(cats.length).fill(null);
+        renderShowdownGrid(cats);
+        dom.sbsSubmitBtn.disabled = true;
+        bombReplacesLeft--;
+        if (bombReplacesLeft <= 0) finalizeBomb();
+    }, 350);
+}
+
+function bombReplacePickEm(card, player) {
+    if (!bombArmed || bombReplacesLeft <= 0) return;
+    if (card.classList.contains('revealed')) return;
+    var cc = BASE_CATS[catKey];
+    var exclude = new Set(usedPlayerIDs);
+    // Also exclude all current card IDs
+    Array.from(dom.pickemGrid.querySelectorAll('.pickem-card')).forEach(function(c) { exclude.add(c.dataset.id); });
+    var needsSeason = catKey.indexOf('seasonHigh') === 0;
+    var pool = NFL_PLAYERS.filter(function(p) {
+        if (exclude.has(p.id)) return false;
+        if (!passesGlobal(p)) return false;
+        if (!poolPass(p)) return false;
+        if (!eraPass(p)) return false;
+        if (!posPass(p, cc.type)) return false;
+        if (!playerMeetsCatMinimum(p, catKey)) return false;
+        if (needsSeason && !hasCompleteSeasonData(p)) return false;
+        return true;
+    });
+    if (pool.length === 0) { showAlert('No replacement available', 'bg-red-500'); disarmBomb(); return; }
+    var replacement = pool[Math.floor(Math.random() * pool.length)];
+    var newVal = getStat(replacement, catKey);
+
+    var nameEl = card.querySelector('.pickem-name');
+    card.classList.add('animate-poof');
+    setTimeout(function() {
+        // Update card data
+        var oldID = card.dataset.id;
+        card.dataset.id = replacement.id;
+        card.dataset.val = newVal;
+        nameEl.textContent = replacement.name;
+        card.classList.remove('animate-poof');
+        card.classList.add('animate-poof-in');
+        setTimeout(function() { card.classList.remove('animate-poof-in'); }, 350);
+        // Update correct IDs
+        var wasCorrect = pickEmState.correctIDs.has(oldID);
+        if (wasCorrect) pickEmState.correctIDs.delete(oldID);
+        // Check if replacement meets threshold
+        var isNewCorrect = cc.lowerBetter ? (newVal <= pickEmState.threshold) : (newVal >= pickEmState.threshold);
+        if (isNewCorrect) pickEmState.correctIDs.add(replacement.id);
+        // Rebind click handler
+        card.onclick = function() { onPickEmCardClick(card, replacement, newVal); };
+        usedPlayerIDs.add(replacement.id);
+        bombReplacesLeft--;
+        if (bombReplacesLeft <= 0) {
+            finalizeBomb();
+        } else {
+            showAlert('Pick ' + bombReplacesLeft + ' more to replace', 'bg-amber-600');
+        }
+    }, 350);
+}
+
 function startGame() {
     score = 0; round = 1; roundResults = [];
     usedPlayerIDs = new Set(); categoryHistory = {};
     hasUsedReroll = false;
+    hasUsedBomb = false;
+    bombArmed = false;
+    bombReplacesLeft = 0;
     dom.scoreDisp.textContent = '0';
     dom.scoreDisp.className = 'text-lg font-black leading-none';
     startRound();
@@ -1983,7 +2211,7 @@ function endGame() {
     dom.endScreen.style.display = 'flex';
     dom.finalScore.textContent = score;
     dom.homeBtn.classList.remove('hidden');
-    dom.rerollBtn.classList.add('hidden');
+    dom.rerollBtn.classList.add('hidden'); dom.bombBtn.classList.add('hidden');
     // Ribbon tier
     var tiers = [
         {min:5000, emoji:'🏆', text:'Platinum Trophy! Legendary!', cls:'score-platinum'},
@@ -2081,6 +2309,7 @@ document.addEventListener('DOMContentLoaded', function() {
     dom.rulesBtn    = document.getElementById('rules-btn');
     dom.lbBtn       = document.getElementById('leaderboard-btn');
     dom.rerollBtn   = document.getElementById('reroll-btn');
+    dom.bombBtn     = document.getElementById('bomb-btn');
     dom.settingsBtn = document.getElementById('settings-btn');
     dom.settingsPop = document.getElementById('settings-popover');
     dom.themeRow    = document.getElementById('theme-toggle-row');
@@ -2245,15 +2474,16 @@ document.addEventListener('DOMContentLoaded', function() {
         dom.gameScreen.classList.add('hidden'); dom.gameScreen.style.display='none';
         dom.endScreen.classList.add('hidden'); dom.endScreen.style.display='none';
         dom.startScreen.classList.remove('hidden');
-        dom.homeBtn.classList.add('hidden'); dom.rerollBtn.classList.add('hidden');
+        dom.homeBtn.classList.add('hidden'); dom.rerollBtn.classList.add('hidden'); dom.bombBtn.classList.add('hidden');
     });
     dom.cardA.addEventListener('click', function() { onCardClick('A'); });
     dom.cardB.addEventListener('click', function() { onCardClick('B'); });
     dom.rerollBtn.addEventListener('click', skipQuestion);
+    dom.bombBtn.addEventListener('click', armBomb);
     dom.playAgainBtn.addEventListener('click', function() {
         dom.endScreen.classList.add('hidden'); dom.endScreen.style.display='none';
         dom.startScreen.classList.remove('hidden');
-        dom.homeBtn.classList.add('hidden'); dom.rerollBtn.classList.add('hidden');
+        dom.homeBtn.classList.add('hidden'); dom.rerollBtn.classList.add('hidden'); dom.bombBtn.classList.add('hidden');
     });
     dom.saveScoreBtn.addEventListener('click', saveScore);
     dom.viewBreakdown.addEventListener('click', function() {
