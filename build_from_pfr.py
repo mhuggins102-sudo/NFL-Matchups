@@ -277,6 +277,7 @@ def main():
             "decades": "|".join(str(d) for d in sorted(decades)),
             "seasons": num_seasons,
             "games": games,
+            "rookieYear": draft_year,
         })
 
         stats_rows.append({
@@ -357,6 +358,7 @@ def main():
             "decades": "|".join(str(d) for d in decades),
             "seasons": num_seasons,
             "games": games,
+            "rookieYear": seasons[0],
         })
 
         stats_rows.append({
@@ -399,7 +401,7 @@ def main():
     # ═══════════════════════════════════════════════════════════════════════
     people_path = os.path.join(OUT_DIR, "People.csv")
     with open(people_path, "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=["playerID", "name", "pos", "decades", "seasons", "games"])
+        w = csv.DictWriter(f, fieldnames=["playerID", "name", "pos", "decades", "seasons", "games", "rookieYear"])
         w.writeheader()
         w.writerows(sorted(people_rows, key=lambda r: r["name"]))
 
