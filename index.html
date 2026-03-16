@@ -98,9 +98,9 @@
         html.dark .pickem-card.revealed.incorrect { background:rgba(127,29,29,0.4)!important; border-color:#ef4444!important; color:#fca5a5!important; }
         .pickem-card.revealed.missed { border-color:#f59e0b!important; background:#fef3c7!important; color:#92400e!important; }
         html.dark .pickem-card.revealed.missed { background:rgba(120,53,15,0.3)!important; border-color:#f59e0b!important; color:#fcd34d!important; }
-        .pickem-card.revealed.correct-muted { background:#dcfce7!important; border-color:transparent!important; color:#6b7280!important; }
+        .pickem-card.revealed.correct-muted { background:#dcfce7!important; border-color:transparent!important; color:#6b7280!important; font-weight:400!important; }
         html.dark .pickem-card.revealed.correct-muted { background:rgba(20,83,45,0.3)!important; color:#9ca3af!important; }
-        .pickem-card.revealed.incorrect-muted { background:#fee2e2!important; border-color:transparent!important; color:#6b7280!important; }
+        .pickem-card.revealed.incorrect-muted { background:#fee2e2!important; border-color:transparent!important; color:#6b7280!important; font-weight:400!important; }
         html.dark .pickem-card.revealed.incorrect-muted { background:rgba(127,29,29,0.3)!important; color:#9ca3af!important; }
         .stat-val { font-size:0.65rem; color:#6b7280; font-weight:700; margin-top:0.15rem; }
         html.dark .stat-val { color:#9ca3af; }
@@ -2034,8 +2034,11 @@ function skipQuestion() {
 }
 
 function armBomb() {
-    // If already armed, toggle off (cancel)
-    if (bombArmed) { disarmBomb(); return; }
+    // If already armed, toggle off (cancel) — but not if Pick Em selections already started
+    if (bombArmed) {
+        if (gameMode === 'pickEm' && bombPendingReplacements.length > 0) return;
+        disarmBomb(); return;
+    }
     if (hasUsedBomb) return;
     // Only allow before any interaction
     if (gameMode === 'howMuch' && dom.submitBtn.textContent !== 'Lock In') return;
@@ -2511,6 +2514,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cancel bomb when clicking anywhere that isn't a valid bomb target
     document.addEventListener('click', function(e) {
         if (!bombArmed) return;
+        // Once Pick Em bomb selections have started, don't allow cancel
+        if (gameMode === 'pickEm' && bombPendingReplacements.length > 0) return;
         // Don't cancel if clicking on bomb button itself (handled above with stopPropagation)
         // Don't cancel if clicking on a valid target (cards, names, pickem cards)
         var t = e.target;
