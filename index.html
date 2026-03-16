@@ -98,6 +98,10 @@
         html.dark .pickem-card.revealed.incorrect { background:rgba(127,29,29,0.4)!important; border-color:#ef4444!important; color:#fca5a5!important; }
         .pickem-card.revealed.missed { border-color:#f59e0b!important; background:#fef3c7!important; color:#92400e!important; }
         html.dark .pickem-card.revealed.missed { background:rgba(120,53,15,0.3)!important; border-color:#f59e0b!important; color:#fcd34d!important; }
+        .pickem-card.revealed.correct-muted { background:#dcfce7!important; border-color:transparent!important; color:#6b7280!important; }
+        html.dark .pickem-card.revealed.correct-muted { background:rgba(20,83,45,0.3)!important; color:#9ca3af!important; }
+        .pickem-card.revealed.incorrect-muted { background:#fee2e2!important; border-color:transparent!important; color:#6b7280!important; }
+        html.dark .pickem-card.revealed.incorrect-muted { background:rgba(127,29,29,0.3)!important; color:#9ca3af!important; }
         .stat-val { font-size:0.65rem; color:#6b7280; font-weight:700; margin-top:0.15rem; }
         html.dark .stat-val { color:#9ca3af; }
         .pickem-card.revealed .stat-val { color: inherit !important; }
@@ -879,6 +883,7 @@ var hasUsedReroll   = false;
 var hasUsedBomb     = false;
 var bombArmed       = false;
 var bombReplacesLeft = 0;
+var bombPendingReplacements = []; // {card, replacement, newVal, oldID} for batch reveal
 var usedPlayerIDs   = new Set();
 var categoryHistory = {};
 var userPickHowMuch = null;
@@ -1438,11 +1443,16 @@ function startRound() {
             card.className = 'pickem-card h-16 flex flex-col items-center justify-center';
             card.dataset.id = item.p.id;
             card.dataset.val = item.val;
+            card.dataset.name = item.p.name;
             card.innerHTML = '<div class="pickem-name text-sm font-black leading-tight text-center pointer-events-none">' + item.p.name + '</div>'
                 + '<div class="stat-val hidden text-xs font-black mt-0.5 pointer-events-none"></div>'
                 + '<div class="base-pts-tag absolute bottom-1 left-1 hidden text-[9px] font-black text-green-600 dark:text-green-400 pointer-events-none">+100</div>'
                 + '<div class="bonus-tag absolute bottom-1 right-1 hidden text-[9px] font-black text-amber-500 pointer-events-none"></div>';
-            card.addEventListener('click', function() { onPickEmCardClick(card, item.p, item.val); });
+            card.addEventListener('click', function() {
+                var p = NFL_PLAYERS.find(function(pl) { return pl.id === card.dataset.id; });
+                var v = parseFloat(card.dataset.val);
+                onPickEmCardClick(card, p || {id:card.dataset.id, name:card.dataset.name}, v);
+            });
             grid.appendChild(card);
         });
         if (dom.pickemChainBar) dom.pickemChainBar.classList.add('hidden');
@@ -1933,9 +1943,6 @@ function endPickEmRound(wasCorrect) {
     var hiddenCards = allCards.filter(function(c) { return !c.classList.contains('revealed'); });
     dom.pickemSubmitBtn.disabled = true;
 
-    var styleGreenUnpicked = ['bg-green-100','dark:bg-green-900/40','border-transparent','text-gray-600','dark:text-gray-400'];
-    var styleRedUnpicked = ['bg-red-100','dark:bg-red-900/40','border-transparent','text-gray-600','dark:text-gray-400'];
-
     var finalize = function() {
         dom.pickemGrid.classList.remove('pointer-events-none');
         // Make all player names into links
@@ -1973,11 +1980,9 @@ function endPickEmRound(wasCorrect) {
             var isC = pickEmState.correctIDs.has(cid);
             var cval = parseFloat(c.dataset.val);
             c.classList.add('revealed','border-2');
-            c.classList.remove('bg-white','dark:bg-gray-800','hover:bg-gray-50','dark:hover:bg-gray-700','border-gray-300','dark:border-transparent');
             c.querySelector('.stat-val').textContent = formatStat(cval, catKey);
             c.querySelector('.stat-val').classList.remove('hidden');
-            if (isC) styleGreenUnpicked.forEach(function(cl) { c.classList.add(cl); });
-            else styleRedUnpicked.forEach(function(cl) { c.classList.add(cl); });
+            c.classList.add(isC ? 'correct-muted' : 'incorrect-muted');
         });
         finalize();
         return;
@@ -1990,11 +1995,9 @@ function endPickEmRound(wasCorrect) {
                 var isC = pickEmState.correctIDs.has(cid);
                 var cval = parseFloat(c.dataset.val);
                 c.classList.add('revealed','border-2');
-                c.classList.remove('bg-white','dark:bg-gray-800','hover:bg-gray-50','dark:hover:bg-gray-700','border-gray-300','dark:border-transparent');
                 c.querySelector('.stat-val').textContent = formatStat(cval, catKey);
                 c.querySelector('.stat-val').classList.remove('hidden');
-                if (isC) styleGreenUnpicked.forEach(function(cl) { c.classList.add(cl); });
-                else styleRedUnpicked.forEach(function(cl) { c.classList.add(cl); });
+                c.classList.add(isC ? 'correct-muted' : 'incorrect-muted');
                 c.classList.add('animate-enter');
             }, i * 300);
         });
@@ -2057,6 +2060,7 @@ function armBomb() {
 function disarmBomb() {
     bombArmed = false;
     bombReplacesLeft = 0;
+    bombPendingReplacements = [];
     dom.bombBtn.classList.remove('bomb-armed');
     if (dom.sbsNameA) dom.sbsNameA.style.cursor = '';
     if (dom.sbsNameB) dom.sbsNameB.style.cursor = '';
@@ -2139,10 +2143,12 @@ function bombReplaceShowdown(which) {
 function bombReplacePickEm(card, player) {
     if (!bombArmed || bombReplacesLeft <= 0) return;
     if (card.classList.contains('revealed')) return;
+    if (card.dataset.bombPending) return; // already selected for replacement
     var cc = BASE_CATS[catKey];
     var exclude = new Set(usedPlayerIDs);
-    // Also exclude all current card IDs
+    // Exclude all current card IDs plus already-queued replacements
     Array.from(dom.pickemGrid.querySelectorAll('.pickem-card')).forEach(function(c) { exclude.add(c.dataset.id); });
+    bombPendingReplacements.forEach(function(pr) { exclude.add(pr.replacement.id); });
     var needsSeason = catKey.indexOf('seasonHigh') === 0;
     var pool = NFL_PLAYERS.filter(function(p) {
         if (exclude.has(p.id)) return false;
@@ -2154,37 +2160,63 @@ function bombReplacePickEm(card, player) {
         if (needsSeason && !hasCompleteSeasonData(p)) return false;
         return true;
     });
-    if (pool.length === 0) { showAlert('No replacement available', 'bg-red-500'); disarmBomb(); return; }
+    if (pool.length === 0) { showAlert('No replacement available', 'bg-red-500'); return; }
     var replacement = pool[Math.floor(Math.random() * pool.length)];
     var newVal = getStat(replacement, catKey);
+    var oldID = card.dataset.id;
+
+    // Mark card as pending and poof out
+    card.dataset.bombPending = '1';
+    bombPendingReplacements.push({card: card, replacement: replacement, newVal: newVal, oldID: oldID});
 
     var nameEl = card.querySelector('.pickem-name');
     card.classList.add('animate-poof');
     setTimeout(function() {
-        // Update card data
-        var oldID = card.dataset.id;
-        card.dataset.id = replacement.id;
-        card.dataset.val = newVal;
-        nameEl.textContent = replacement.name;
+        nameEl.textContent = '?';
         card.classList.remove('animate-poof');
-        card.classList.add('animate-poof-in');
-        setTimeout(function() { card.classList.remove('animate-poof-in'); }, 350);
-        // Update correct IDs
-        var wasCorrect = pickEmState.correctIDs.has(oldID);
-        if (wasCorrect) pickEmState.correctIDs.delete(oldID);
-        // Check if replacement meets threshold
-        var isNewCorrect = cc.lowerBetter ? (newVal <= pickEmState.threshold) : (newVal >= pickEmState.threshold);
-        if (isNewCorrect) pickEmState.correctIDs.add(replacement.id);
-        // Rebind click handler
-        card.onclick = function() { onPickEmCardClick(card, replacement, newVal); };
-        usedPlayerIDs.add(replacement.id);
-        bombReplacesLeft--;
-        if (bombReplacesLeft <= 0) {
-            finalizeBomb();
-        } else {
-            showAlert('Pick ' + bombReplacesLeft + ' more to replace', 'bg-amber-600');
-        }
+        card.style.opacity = '0.5';
     }, 350);
+
+    bombReplacesLeft--;
+    if (bombReplacesLeft > 0) {
+        showAlert('Pick ' + bombReplacesLeft + ' more to replace', 'bg-amber-600');
+    } else {
+        // All 3 selected — reveal new players after a brief pause
+        setTimeout(function() {
+            revealBombReplacements();
+        }, 500);
+    }
+}
+
+function revealBombReplacements() {
+    var cc = BASE_CATS[catKey];
+    var delay = 0;
+    bombPendingReplacements.forEach(function(pr, i) {
+        setTimeout(function() {
+            var card = pr.card;
+            var replacement = pr.replacement;
+            var newVal = pr.newVal;
+            // Update card data
+            var wasCorrect = pickEmState.correctIDs.has(pr.oldID);
+            if (wasCorrect) pickEmState.correctIDs.delete(pr.oldID);
+            var isNewCorrect = cc.lowerBetter ? (newVal <= pickEmState.threshold) : (newVal >= pickEmState.threshold);
+            if (isNewCorrect) pickEmState.correctIDs.add(replacement.id);
+            card.dataset.id = replacement.id;
+            card.dataset.val = newVal;
+            card.dataset.name = replacement.name;
+            delete card.dataset.bombPending;
+            card.style.opacity = '';
+            var nameEl = card.querySelector('.pickem-name');
+            nameEl.textContent = replacement.name;
+            card.classList.add('animate-poof-in');
+            setTimeout(function() { card.classList.remove('animate-poof-in'); }, 350);
+            usedPlayerIDs.add(replacement.id);
+        }, i * 350);
+    });
+    setTimeout(function() {
+        bombPendingReplacements = [];
+        finalizeBomb();
+    }, bombPendingReplacements.length * 350);
 }
 
 function startGame() {
