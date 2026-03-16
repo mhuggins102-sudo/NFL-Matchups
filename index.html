@@ -757,7 +757,6 @@ function loadAllData(onDone) {
     loadCSV('Legends.csv', function(d) { tick('legends', d); });
 }
 
-/* REPLACED: hardcoded player data removed — now loaded from CSV via loadAllData() */
 
 // ═══════════════════════════════════════
 // CATEGORY DEFINITIONS
@@ -923,6 +922,14 @@ function eraPass(p) {
     if (eraMode === 'modern')  return p.decades.has(2000) || p.decades.has(2010) || p.decades.has(2020);
     if (eraMode === 'decade')  return p.decades.has(selectedDecade);
     return true;
+}
+
+// Showdown requires season-high stats; exclude players with incomplete data
+function hasSeasonHighs(p) {
+    if (p.pos === 'QB') return (p.stats.seasonHighPassYards || 0) > 0;
+    if (p.pos === 'RB') return (p.stats.seasonHighRushYards || 0) > 0;
+    // WR / TE
+    return (p.stats.seasonHighRecYards || 0) > 0;
 }
 
 function getStat(p, k) {
@@ -1218,11 +1225,11 @@ function generateShowdown() {
     var posType = pickPositionType();
     var realPos = posType === 'skill' ? (Math.random() < 0.5 ? 'WR' : 'TE') : posType;
     var pool = NFL_PLAYERS.filter(function(p) {
-        return !usedPlayerIDs.has(p.id) && passesGlobal(p) && poolPass(p) && eraPass(p) && p.pos === realPos;
+        return !usedPlayerIDs.has(p.id) && passesGlobal(p) && poolPass(p) && eraPass(p) && p.pos === realPos && hasSeasonHighs(p);
     });
     if (pool.length < 2) {
         // fallback: relax usedIDs
-        pool = NFL_PLAYERS.filter(function(p) { return passesGlobal(p) && poolPass(p) && eraPass(p) && p.pos === realPos; });
+        pool = NFL_PLAYERS.filter(function(p) { return passesGlobal(p) && poolPass(p) && eraPass(p) && p.pos === realPos && hasSeasonHighs(p); });
     }
     if (pool.length < 2) return null;
     var cats = realPos === 'QB' ? SBS_CATS_QB : (realPos === 'RB' ? SBS_CATS_RB : SBS_CATS_WR);
