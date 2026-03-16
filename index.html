@@ -1366,6 +1366,7 @@ function calcHowMuchScore(diff, min, max) {
 // ═══════════════════════════════════════
 function startRound() {
     if (round > 10) { endGame(); return; }
+    disarmBomb(); // reset armed state each round
     dom.roundDisp.textContent = 'Round ' + round + '/10';
     var eraLabels = {allEras:'All Eras', modern:'Modern (2000+)', decade:selectedDecade + 's'};
     dom.eraLabel.textContent = eraLabels[eraMode] || '';
@@ -1380,8 +1381,8 @@ function startRound() {
         dom.catLabel.textContent = eligLabel + ' \u00b7 ' + posLabel;
         dom.nameA.textContent = A.name;
         dom.nameB.textContent = B.name;
-        dom.statA.textContent = '--'; dom.statA.className = 'stat-reveal mt-1 text-xs font-semibold hidden text-gray-600 dark:text-gray-300';
-        dom.statB.textContent = '--'; dom.statB.className = 'stat-reveal mt-1 text-xs font-semibold hidden text-gray-600 dark:text-gray-300';
+        dom.statA.textContent = '--'; dom.statA.classList.add('hidden');
+        dom.statB.textContent = '--'; dom.statB.classList.add('hidden');
         var baseCardClass = 'player-card group relative flex flex-col items-center justify-center p-2 h-16 bg-white dark:bg-gray-800 rounded-2xl border-2 border-gray-300 dark:border-transparent shadow-sm transition-all duration-200 active:scale-[0.98]';
         dom.cardA.className = baseCardClass;
         dom.cardB.className = baseCardClass;
@@ -1574,20 +1575,11 @@ function lockInHowMuch() {
 
     dom.feedback.innerHTML = '';
 
-    function styleStatReveal(statEl, isWinner) {
-        statEl.classList.remove('hidden','text-gray-600','dark:text-gray-300');
-        if (isWinner) {
-            statEl.classList.add('text-green-700','dark:text-green-300','bg-green-200','dark:bg-green-800/50','rounded','px-2','py-0.5','font-black');
-        } else {
-            statEl.classList.add('text-red-600','dark:text-red-300','bg-red-200','dark:bg-red-800/50','rounded','px-2','py-0.5');
-        }
-    }
-
     // ── INSTANT MODE (animations off) ──
     if (!useAnimations) {
         setCardStyles();
-        dom.statA.textContent = formatStat(sA, catKey); styleStatReveal(dom.statA, correctPick === 'A');
-        dom.statB.textContent = formatStat(sB, catKey); styleStatReveal(dom.statB, correctPick === 'B');
+        dom.statA.textContent = formatStat(sA, catKey); dom.statA.classList.remove('hidden','text-gray-600','dark:text-gray-300');
+        dom.statB.textContent = formatStat(sB, catKey); dom.statB.classList.remove('hidden','text-gray-600','dark:text-gray-300');
         showPinAndResults(false);
         dom.pin.style.transition = 'none';
         dom.pin.style.left = pinPct + '%';
@@ -1614,8 +1606,8 @@ function lockInHowMuch() {
     // Wrong player — quick reveal
     if (!playerCorrect) {
         setCardStyles();
-        dom.statA.textContent = formatStat(sA, catKey); styleStatReveal(dom.statA, correctPick === 'A');
-        dom.statB.textContent = formatStat(sB, catKey); styleStatReveal(dom.statB, correctPick === 'B');
+        dom.statA.textContent = formatStat(sA, catKey); dom.statA.classList.remove('hidden','text-gray-600','dark:text-gray-300');
+        dom.statB.textContent = formatStat(sB, catKey); dom.statB.classList.remove('hidden','text-gray-600','dark:text-gray-300');
         showPinAndResults(false);
         dom.pin.style.transition = 'none';
         dom.pin.style.left = pinPct + '%';
@@ -1635,7 +1627,7 @@ function lockInHowMuch() {
     loserCard.classList.remove('ring-4','ring-green-500','bg-green-50','dark:bg-green-900/20','border-gray-300','dark:border-transparent');
     loserCard.classList.add('opacity-50','bg-gray-100','dark:bg-gray-800','border-transparent');
     winnerStat.textContent = formatStat(winnerVal, catKey);
-    styleStatReveal(winnerStat, true);
+    winnerStat.classList.remove('hidden','text-gray-600','dark:text-gray-300');
 
     // Stage 1 (500ms): "Correct Player +200"
     setTimeout(function() {
@@ -1668,7 +1660,7 @@ function lockInHowMuch() {
             dom.resultText.textContent = diffText;
             dom.resultText.className = 'absolute bottom-full left-1/2 transform -translate-x-1/2 mb-0 text-sm font-black whitespace-nowrap bg-white dark:bg-gray-800 px-2 py-1 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 opacity-0 ' + txtClr + ' animate-float-result';
             loserStat.textContent = formatStat(loserVal, catKey);
-            styleStatReveal(loserStat, false);
+            loserStat.classList.remove('hidden','text-gray-600','dark:text-gray-300');
             showPinAndResults(true);
 
             if (rangeCorrect) {
@@ -1981,6 +1973,7 @@ function endPickEmRound(wasCorrect) {
             var isC = pickEmState.correctIDs.has(cid);
             var cval = parseFloat(c.dataset.val);
             c.classList.add('revealed','border-2');
+            c.classList.remove('bg-white','dark:bg-gray-800','hover:bg-gray-50','dark:hover:bg-gray-700','border-gray-300','dark:border-transparent');
             c.querySelector('.stat-val').textContent = formatStat(cval, catKey);
             c.querySelector('.stat-val').classList.remove('hidden');
             if (isC) styleGreenUnpicked.forEach(function(cl) { c.classList.add(cl); });
@@ -1997,6 +1990,7 @@ function endPickEmRound(wasCorrect) {
                 var isC = pickEmState.correctIDs.has(cid);
                 var cval = parseFloat(c.dataset.val);
                 c.classList.add('revealed','border-2');
+                c.classList.remove('bg-white','dark:bg-gray-800','hover:bg-gray-50','dark:hover:bg-gray-700','border-gray-300','dark:border-transparent');
                 c.querySelector('.stat-val').textContent = formatStat(cval, catKey);
                 c.querySelector('.stat-val').classList.remove('hidden');
                 if (isC) styleGreenUnpicked.forEach(function(cl) { c.classList.add(cl); });
@@ -2037,7 +2031,9 @@ function skipQuestion() {
 }
 
 function armBomb() {
-    if (hasUsedBomb || bombArmed) return;
+    // If already armed, toggle off (cancel)
+    if (bombArmed) { disarmBomb(); return; }
+    if (hasUsedBomb) return;
     // Only allow before any interaction
     if (gameMode === 'howMuch' && dom.submitBtn.textContent !== 'Lock In') return;
     if (gameMode === 'howMuch' && userPickHowMuch !== null) return;
@@ -2479,7 +2475,19 @@ document.addEventListener('DOMContentLoaded', function() {
     dom.cardA.addEventListener('click', function() { onCardClick('A'); });
     dom.cardB.addEventListener('click', function() { onCardClick('B'); });
     dom.rerollBtn.addEventListener('click', skipQuestion);
-    dom.bombBtn.addEventListener('click', armBomb);
+    dom.bombBtn.addEventListener('click', function(e) { e.stopPropagation(); armBomb(); });
+    // Cancel bomb when clicking anywhere that isn't a valid bomb target
+    document.addEventListener('click', function(e) {
+        if (!bombArmed) return;
+        // Don't cancel if clicking on bomb button itself (handled above with stopPropagation)
+        // Don't cancel if clicking on a valid target (cards, names, pickem cards)
+        var t = e.target;
+        if (t === dom.bombBtn || dom.bombBtn.contains(t)) return;
+        if (gameMode === 'howMuch' && (dom.cardA.contains(t) || dom.cardB.contains(t))) return;
+        if (gameMode === 'sideBySide' && (dom.sbsNameA.contains(t) || dom.sbsNameB.contains(t))) return;
+        if (gameMode === 'pickEm' && dom.pickemGrid.contains(t)) return;
+        disarmBomb();
+    });
     dom.playAgainBtn.addEventListener('click', function() {
         dom.endScreen.classList.add('hidden'); dom.endScreen.style.display='none';
         dom.startScreen.classList.remove('hidden');
