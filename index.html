@@ -205,7 +205,7 @@
                 </div>
             </div>
             <div>
-                <label class="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-600 dark:text-gray-400 mb-2 tracking-wider">Eligibility
+                <label class="flex items-center gap-1.5 text-xs font-bold uppercase text-gray-600 dark:text-gray-400 mb-2 tracking-wider">Eligibility Tier
                     <button id="elig-help-btn" type="button" class="inline-flex items-center justify-center w-4 h-4 rounded-full border border-gray-400 dark:border-gray-600 text-[10px] font-black text-gray-600 dark:text-gray-400 hover:text-green-500 hover:border-green-400 transition leading-none">?</button>
                 </label>
                 <div class="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl gap-1">
@@ -427,7 +427,7 @@
         <div class="p-0 overflow-y-auto text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
 
             <!-- SECTION 1: HOW TO PLAY -->
-            <details open class="group border-b border-gray-200 dark:border-gray-800">
+            <details class="group border-b border-gray-200 dark:border-gray-800 rules-accordion">
                 <summary class="flex justify-between items-center p-4 font-bold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50 transition select-none">
                     <span>How to Play</span>
                     <svg class="w-4 h-4 transition-transform duration-200 text-gray-600 dark:text-gray-400 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -471,7 +471,7 @@
             </details>
 
             <!-- SECTION 2: SCORING BREAKDOWN -->
-            <details class="group border-b border-gray-200 dark:border-gray-800">
+            <details class="group border-b border-gray-200 dark:border-gray-800 rules-accordion">
                 <summary class="flex justify-between items-center p-4 font-bold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50 transition select-none">
                     <span>Scoring Breakdown</span>
                     <svg class="w-4 h-4 transition-transform duration-200 text-gray-600 dark:text-gray-400 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -535,13 +535,13 @@
             </details>
 
             <!-- SECTION 3: ELIGIBILITY CRITERIA -->
-            <details class="group border-b border-gray-200 dark:border-gray-800">
+            <details class="group border-b border-gray-200 dark:border-gray-800 rules-accordion">
                 <summary class="flex justify-between items-center p-4 font-bold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50 transition select-none">
                     <span>Eligibility Criteria</span>
                     <svg class="w-4 h-4 transition-transform duration-200 text-gray-600 dark:text-gray-400 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                 </summary>
                 <div class="px-4 pb-4 pt-0 text-gray-600 dark:text-gray-400 text-xs space-y-4">
-                    <p>Players are filtered by <strong>Eligibility Criteria</strong> and <strong>Player Pool</strong>, selected independently on the home screen.</p>
+                    <p>Players are filtered by <strong>Eligibility Tier</strong>, <strong>Player Pool</strong>, and <strong>Era</strong>, each selected independently on the home screen.</p>
                     <div>
                         <h4 class="font-bold text-gray-900 dark:text-white mb-1">1. Veteran</h4>
                         <p class="mb-1">Designed to include recognizable players with significant careers.</p>
@@ -584,7 +584,7 @@
             </details>
 
             <!-- SECTION 4: SPECIAL FEATURES -->
-            <details class="group">
+            <details class="group rules-accordion">
                 <summary class="flex justify-between items-center p-4 font-bold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800/50 transition select-none">
                     <span>Special Features</span>
                     <svg class="w-4 h-4 transition-transform duration-200 text-gray-600 dark:text-gray-400 group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -645,11 +645,7 @@
             <h3 class="text-lg font-black text-gray-900 dark:text-white">Game Modes</h3>
             <button id="close-gamemode-help" class="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition text-gray-600 dark:text-gray-500">&times;</button>
         </div>
-        <div class="p-5 text-sm text-gray-600 dark:text-gray-300 space-y-4">
-            <div><div class="font-black text-gray-800 dark:text-white mb-1">How Much?</div><p class="text-xs">Pick the player with the higher stat, then set a range for the difference. Tighter range = more points.</p></div>
-            <div class="border-t border-gray-200 dark:border-gray-800 pt-3"><div class="font-black text-gray-800 dark:text-white mb-1">Showdown</div><p class="text-xs">Two players, 10 stat categories. Pick who wins each. Need 6+ correct to score (100–1000 pts).</p></div>
-            <div class="border-t border-gray-200 dark:border-gray-800 pt-3"><div class="font-black text-gray-800 dark:text-white mb-1">Pick 'Em</div><p class="text-xs">A threshold is shown. From 10 players, pick those who meet it. Correct picks earn 100 pts + chain bonuses.</p></div>
-        </div>
+        <div id="gamemode-help-body" class="p-5 text-sm text-gray-600 dark:text-gray-300 space-y-4"></div>
     </div>
 </div>
 
@@ -2634,10 +2630,40 @@ document.addEventListener('DOMContentLoaded', function() {
     dom.lbBtn.addEventListener('click', function() { renderLeaderboard(); dom.lbModal.classList.remove('hidden'); });
     dom.closeLbBtn.addEventListener('click', function() { dom.lbModal.classList.add('hidden'); });
     dom.lbOverlay.addEventListener('click', function() { dom.lbModal.classList.add('hidden'); });
-    dom.rulesBtn.addEventListener('click', function() { dom.rulesModal.classList.remove('hidden'); });
+    dom.rulesBtn.addEventListener('click', function() {
+        // Close all accordion sections when modal opens
+        document.querySelectorAll('.rules-accordion').forEach(function(d) { d.removeAttribute('open'); });
+        dom.rulesModal.classList.remove('hidden');
+    });
+    // Only allow one accordion section open at a time
+    document.querySelectorAll('.rules-accordion').forEach(function(detail) {
+        detail.addEventListener('toggle', function() {
+            if (this.open) {
+                document.querySelectorAll('.rules-accordion').forEach(function(d) {
+                    if (d !== detail) d.removeAttribute('open');
+                });
+            }
+        });
+    });
     dom.closeRules.addEventListener('click', function() { dom.rulesModal.classList.add('hidden'); });
     dom.rulesOverlay.addEventListener('click', function() { dom.rulesModal.classList.add('hidden'); });
-    document.getElementById('gamemode-help-btn').addEventListener('click', function() { dom.gmHelpModal.classList.remove('hidden'); });
+    document.getElementById('gamemode-help-btn').addEventListener('click', function() {
+        var modes = [
+            {key:'howMuch', name:'How Much?', desc:'Pick the player with the higher stat, then set a range for the difference. Tighter range = more points.'},
+            {key:'sideBySide', name:'Showdown', desc:'Two players, 10 stat categories. Pick who wins each. Need 6+ correct to score (100\u20131000 pts).'},
+            {key:'pickEm', name:'Pick \u2019Em', desc:'A threshold is shown. From 10 players, pick those who meet it. Correct picks earn 100 pts + chain bonuses.'}
+        ];
+        var html = '';
+        modes.forEach(function(m, i) {
+            var active = gameMode === m.key;
+            var border = i > 0 ? ' border-t border-gray-200 dark:border-gray-800 pt-3' : '';
+            var ring = active ? ' ring-2 ring-green-500 rounded-lg p-2 -mx-2 bg-green-50 dark:bg-green-900/20' : '';
+            var badge = active ? ' <span class="text-[10px] font-black text-green-600 dark:text-green-400 ml-1">ACTIVE</span>' : '';
+            html += '<div class="' + border + ring + '"><div class="font-black text-gray-800 dark:text-white mb-1">' + m.name + badge + '</div><p class="text-xs">' + m.desc + '</p></div>';
+        });
+        document.getElementById('gamemode-help-body').innerHTML = html;
+        dom.gmHelpModal.classList.remove('hidden');
+    });
     dom.closeGmHelp.addEventListener('click', function() { dom.gmHelpModal.classList.add('hidden'); });
     dom.gmHelpOverlay.addEventListener('click', function() { dom.gmHelpModal.classList.add('hidden'); });
     document.getElementById('elig-help-btn').addEventListener('click', function() {
