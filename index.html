@@ -939,9 +939,17 @@ function formatStat(v, k) {
 
 function makeLink(p) {
     var base = 'https://www.pro-football-reference.com/players/';
-    var parts = p.name.replace(/[^a-zA-Z ]/g,'').trim().split(' ');
-    var last = parts[parts.length - 1], first = parts[0];
-    var url = base + last[0] + '/' + last.slice(0,4) + first.slice(0,2) + '00.htm';
+    var id = p.id;
+    var url;
+    // PFR IDs look like "BradTo00" (letters+digits); GSIS IDs look like "00-0019596"
+    if (id && id.length >= 4 && !id.match(/^\d{2}-/)) {
+        url = base + id[0] + '/' + id + '.htm';
+    } else {
+        // Fallback: guess URL from name (for legacy/undrafted players)
+        var parts = p.name.replace(/[^a-zA-Z ]/g,'').trim().split(' ');
+        var last = parts[parts.length - 1], first = parts[0];
+        url = base + last[0] + '/' + last.slice(0,4) + first.slice(0,2) + '00.htm';
+    }
     return '<a href="' + url + '" target="_blank" class="text-inherit no-underline cursor-pointer relative z-20 hover:opacity-75 transition-opacity" style="font:inherit;color:inherit;">' + p.name + '</a>';
 }
 

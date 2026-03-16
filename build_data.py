@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """
+DEPRECATED: Superseded by build_from_pfr.py which uses nflverse draft_picks
+(PFR-sourced career totals) to produce correct stats for all players,
+including those whose careers span the 1999 boundary.
+
 Build NFL career stats CSVs from nflverse open-source data.
 
 Downloads weekly player stats (1999-2024) from nflverse GitHub releases,
