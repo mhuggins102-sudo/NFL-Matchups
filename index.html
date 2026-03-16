@@ -1771,6 +1771,20 @@ function onSBSCellClick(idx, which, cats) {
         cells[0].classList.remove('selected');
         cells[1].classList.remove('selected');
         dom.sbsSubmitBtn.disabled = true;
+        // If all cells are now unselected, re-enable die and bomb
+        var anyPicked = sbsPicks.some(function(p) { return p !== null; });
+        if (!anyPicked) {
+            if (!hasUsedReroll) {
+                dom.rerollBtn.classList.remove('opacity-50','cursor-not-allowed');
+                dom.rerollBtn.classList.add('hover:bg-emerald-200');
+                dom.rerollBtn.disabled = false;
+            }
+            if (!hasUsedBomb) {
+                dom.bombBtn.classList.remove('opacity-50','cursor-not-allowed');
+                dom.bombBtn.classList.add('hover:bg-emerald-200');
+                dom.bombBtn.disabled = false;
+            }
+        }
         return;
     }
     // Clear previous selection for this row, then select new one
@@ -2068,10 +2082,11 @@ function disarmBomb() {
     bombReplacesLeft = 0;
     bombPendingReplacements = [];
     dom.bombBtn.classList.remove('bomb-armed');
-    // Re-enable reroll die (unless it was already used)
+    // Fully restore reroll die appearance (unless it was already used)
     if (!hasUsedReroll) {
         dom.rerollBtn.disabled = false;
-        dom.rerollBtn.classList.remove('opacity-60','cursor-not-allowed');
+        dom.rerollBtn.classList.remove('opacity-60','opacity-50','cursor-not-allowed');
+        dom.rerollBtn.classList.add('hover:bg-emerald-200');
     }
     if (dom.sbsNameA) dom.sbsNameA.style.cursor = '';
     if (dom.sbsNameB) dom.sbsNameB.style.cursor = '';
@@ -2105,11 +2120,27 @@ function findReplacementPlayer(excludeIDs, pos, catKeyFilter) {
 
 function bombReplaceHowMuch(which) {
     if (!bombArmed || bombReplacesLeft <= 0) return;
-    var oldPlayer = which === 'A' ? A : B;
+    var catDef = BASE_CATS[catKey];
+    var other = which === 'A' ? B : A;
+    var otherStat = getStat(other, catKey);
+    var dMin = catDef.dMin, dMax = catDef.dMin * 5;
+    var needsSeason = catKey.indexOf('seasonHigh') === 0;
     var exclude = new Set(usedPlayerIDs);
     exclude.add(A.id); exclude.add(B.id);
-    var replacement = findReplacementPlayer(exclude, null, catKey);
-    if (!replacement) { showAlert('No replacement available', 'bg-red-500'); disarmBomb(); return; }
+    // Find a replacement that keeps the diff within the guessable range
+    var candidates = NFL_PLAYERS.filter(function(p) {
+        if (exclude.has(p.id)) return false;
+        if (!passesGlobal(p)) return false;
+        if (!poolPass(p)) return false;
+        if (!eraPass(p)) return false;
+        if (!posPass(p, catDef.type)) return false;
+        if (!playerMeetsCatMinimum(p, catKey)) return false;
+        if (needsSeason && !hasCompleteSeasonData(p)) return false;
+        var d = Math.abs(getStat(p, catKey) - otherStat);
+        return d >= dMin && d <= dMax;
+    });
+    if (candidates.length === 0) { showAlert('No replacement available', 'bg-red-500'); disarmBomb(); return; }
+    var replacement = candidates[Math.floor(Math.random() * candidates.length)];
     usedPlayerIDs.add(replacement.id);
     var nameEl = which === 'A' ? dom.nameA : dom.nameB;
     nameEl.classList.add('animate-poof');
@@ -2156,6 +2187,11 @@ function bombReplacePickEm(card, player) {
     if (card.classList.contains('revealed')) return;
     if (card.dataset.bombPending) return; // already selected for replacement
     var cc = BASE_CATS[catKey];
+    var threshold = pickEmState.threshold;
+    var wasCorrect = pickEmState.correctIDs.has(player.id);
+    // Build buffer zone matching generatePickEm logic
+    var buffer = threshold * cc.tolerance;
+    if (cc.minBuffer) buffer = Math.max(buffer, cc.minBuffer);
     var exclude = new Set(usedPlayerIDs);
     // Exclude all current card IDs plus already-queued replacements
     Array.from(dom.pickemGrid.querySelectorAll('.pickem-card')).forEach(function(c) { exclude.add(c.dataset.id); });
@@ -2169,6 +2205,22 @@ function bombReplacePickEm(card, player) {
         if (!posPass(p, cc.type)) return false;
         if (!playerMeetsCatMinimum(p, catKey)) return false;
         if (needsSeason && !hasCompleteSeasonData(p)) return false;
+        // Must preserve correct/incorrect status and fall within buffer zone
+        var val = getStat(p, catKey);
+        var isCorrect = cc.lowerBetter ? (val <= threshold) : (val >= threshold);
+        if (isCorrect !== wasCorrect) return false;
+        // Must be within the buffer zone (same as generatePickEm)
+        if (wasCorrect) {
+            var goodMin, goodMax;
+            if (cc.lowerBetter) { goodMax = threshold; goodMin = Math.max(0, threshold - buffer); }
+            else { goodMin = threshold; goodMax = threshold + buffer; }
+            if (val < goodMin || val > goodMax) return false;
+        } else {
+            var badMin, badMax;
+            if (cc.lowerBetter) { badMin = threshold + 0.001; badMax = threshold + buffer; }
+            else { badMax = threshold - 0.001; badMin = Math.max(0, threshold - buffer); }
+            if (val < badMin || val > badMax) return false;
+        }
         return true;
     });
     if (pool.length === 0) { showAlert('No replacement available', 'bg-red-500'); return; }
