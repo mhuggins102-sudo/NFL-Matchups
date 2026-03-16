@@ -98,10 +98,10 @@
         html.dark .pickem-card.revealed.incorrect { background:rgba(127,29,29,0.4)!important; border-color:#ef4444!important; color:#fca5a5!important; }
         .pickem-card.revealed.missed { border-color:#f59e0b!important; background:#fef3c7!important; color:#92400e!important; }
         html.dark .pickem-card.revealed.missed { background:rgba(120,53,15,0.3)!important; border-color:#f59e0b!important; color:#fcd34d!important; }
-        .pickem-card.revealed.correct-muted { background:#dcfce7!important; border-color:transparent!important; color:#6b7280!important; font-weight:400!important; }
-        html.dark .pickem-card.revealed.correct-muted { background:rgba(20,83,45,0.3)!important; color:#9ca3af!important; }
-        .pickem-card.revealed.incorrect-muted { background:#fee2e2!important; border-color:transparent!important; color:#6b7280!important; font-weight:400!important; }
-        html.dark .pickem-card.revealed.incorrect-muted { background:rgba(127,29,29,0.3)!important; color:#9ca3af!important; }
+        .pickem-card.revealed.correct-muted { background:#dcfce7!important; border-color:transparent!important; color:#4b5563!important; font-weight:400!important; }
+        html.dark .pickem-card.revealed.correct-muted { background:rgba(20,83,45,0.4)!important; color:#9ca3af!important; }
+        .pickem-card.revealed.incorrect-muted { background:#fee2e2!important; border-color:transparent!important; color:#4b5563!important; font-weight:400!important; }
+        html.dark .pickem-card.revealed.incorrect-muted { background:rgba(127,29,29,0.4)!important; color:#9ca3af!important; }
         .stat-val { font-size:0.65rem; color:#6b7280; font-weight:700; margin-top:0.15rem; }
         html.dark .stat-val { color:#9ca3af; }
         .pickem-card.revealed .stat-val { color: inherit !important; }
@@ -2051,6 +2051,9 @@ function armBomb() {
     bombArmed = true;
     bombReplacesLeft = gameMode === 'pickEm' ? 3 : 1;
     dom.bombBtn.classList.add('bomb-armed');
+    // Disable reroll die while bomb is armed
+    dom.rerollBtn.disabled = true;
+    dom.rerollBtn.classList.add('opacity-60','cursor-not-allowed');
     // Highlight targetable names
     if (gameMode === 'sideBySide') {
         dom.sbsNameA.style.cursor = 'pointer';
@@ -2065,6 +2068,11 @@ function disarmBomb() {
     bombReplacesLeft = 0;
     bombPendingReplacements = [];
     dom.bombBtn.classList.remove('bomb-armed');
+    // Re-enable reroll die (unless it was already used)
+    if (!hasUsedReroll) {
+        dom.rerollBtn.disabled = false;
+        dom.rerollBtn.classList.remove('opacity-60','cursor-not-allowed');
+    }
     if (dom.sbsNameA) dom.sbsNameA.style.cursor = '';
     if (dom.sbsNameB) dom.sbsNameB.style.cursor = '';
 }
